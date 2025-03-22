@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GlowCode IDE</title>
+  <title>CodeCrystal IDE</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -267,7 +267,7 @@
           <polyline points="16 18 22 12 16 6"></polyline>
           <polyline points="8 6 2 12 8 18"></polyline>
         </svg>
-        <span class="font-bold text-lg">GlowCode IDE</span>
+        <span class="font-bold text-lg">CodeCrystal IDE</span>
         <span id="file-counter" class="text-xs ml-4 text-gray-400">No files open</span>
       </div>
       <div class="flex space-x-3">
@@ -416,7 +416,7 @@
               </div>
             </div>
             <div id="terminal" class="terminal flex-1 overflow-auto">
-              <div class="terminal-line">Welcome to GlowCode Terminal. Press Run to execute your code.</div>
+              <div class="terminal-line">Welcome to CodeCrystal Terminal. Press Run to execute your code.</div>
             </div>
           </div>
         </div>
@@ -1801,7 +1801,7 @@ except Exception as e:
           // Create a download link
           const downloadLink = document.createElement("a");
           downloadLink.href = URL.createObjectURL(zipBlob);
-          downloadLink.download = "glowcode-project.zip";
+          downloadLink.download = "codecrystal-project.zip";
           
           // Add to document, click and remove
           document.body.appendChild(downloadLink);
