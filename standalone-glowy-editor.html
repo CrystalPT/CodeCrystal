@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlowCode IDE</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Code Mirror for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  
+  <!-- Code Mirror language modes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/ruby/ruby.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/go/go.min.js"></script>
+  
+  <!-- Code Mirror theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+  
+  <!-- Pyodide for Python execution -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  
+  <!-- JSZip Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    /* Custom glow effects for CodeMirror tokens */
+    .cm-keyword {
+      color: #ff9d00 !important;
+      text-shadow: 0 0 8px rgba(255, 157, 0, 0.6) !important;
+      font-weight: bold !important;
+    }
+    
+    .cm-def, .cm-variable-2, .cm-property {
+      color: #c792ea !important;
+      text-shadow: 0 0 8px rgba(199, 146, 234, 0.6) !important;
+    }
+    
+    .cm-string {
+      color: #7ec699 !important;
+      text-shadow: 0 0 8px rgba(126, 198, 153, 0.6) !important;
+    }
+    
+    .cm-number {
+      color: #7fcef5 !important;
+      text-shadow: 0 0 8px rgba(127, 206, 245, 0.6) !important;
+    }
+    
+    .cm-comment {
+      color: #676e95 !important;
+      font-style: italic !important;
+    }
+    
+    .cm-variable {
+      color: #e06c75 !important;
+      text-shadow: 0 0 8px rgba(224, 108, 117, 0.6) !important;
+    }
+    
+    .cm-operator {
+      color: #f9f9f9 !important;
+      text-shadow: 0 0 8px rgba(249, 249, 249, 0.6) !important;
+    }
+    
+    .cm-tag {
+      color: #ff5370 !important;
+      text-shadow: 0 0 8px rgba(255, 83, 112, 0.6) !important;
+    }
+    
+    .cm-attribute {
+      color: #ffcb6b !important;
+      text-shadow: 0 0 8px rgba(255, 203, 107, 0.6) !important;
+    }
+    
+    /* Overriding CodeMirror styles */
+    .CodeMirror {
+      height: 100% !important;
+      font-family: monospace !important;
+      font-size: 14px !important;
+      line-height: 1.6 !important;
+    }
+    
+    .CodeMirror-gutters {
+      background-color: rgba(0, 0, 0, 0.3) !important;
+      border-right: none !important;
+    }
+    
+    .CodeMirror-linenumber {
+      color: #909090 !important;
+    }
+    
+    /* Terminal styles */
+    .terminal {
+      background-color: #1a1a1a;
+      color: #f0f0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 10px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      height: 100%;
+    }
+    
+    .terminal-error {
+      color: #ff6b6b;
+    }
+    
+    .terminal-success {
+      color: #6bff6b;
+    }
+    
+    .terminal-warning {
+      color: #ffde6b;
+    }
+    
+    .terminal-line {
+      margin: 0;
+      padding: 2px 0;
+    }
+    
+    /* File badge */
+    .file-badge {
+      width: 12px;
+      height: 12px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    
+    /* Unsaved indicator */
+    .unsaved-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 4px;
+      background-color: #f87171;
+      display: inline-block;
+      margin-left: 6px;
+    }
+    
+    /* Toast notification style */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      border-radius: 4px;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+    
+    /* Language badges - make them more rounded */
+    .language-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border-radius: 16px;
+      margin-right: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      min-width: 80px;
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .language-badge:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    /* File tab styling */
+    .tab {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      padding-right: 8px;
+      cursor: pointer;
+      border-right: 1px solid #2d3748;
+      position: relative;
+      overflow: hidden;
+      min-width: 120px;
+      max-width: 200px;
+    }
+    
+    .tab.active {
+      background-color: #2d3748;
+    }
+    
+    .tab-name-container {
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .tab-actions {
+      display: flex;
+      margin-left: 4px;
+      opacity: 0.7;
+    }
+    
+    .tab:hover .tab-actions {
+      opacity: 1;
+    }
+    
+    .tab-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-left: 2px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-action-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Sidebar button styling */
+    .sidebar-button {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      color: #cccccc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .sidebar-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+  <div id="editor-container" class="flex flex-col h-screen">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-2 border-b border-gray-700">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2 text-purple-500" viewBox="0 0 24 24" fill="none" 
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span class="font-bold text-lg">GlowCode IDE</span>
+        <span id="file-counter" class="text-xs ml-4 text-gray-400">No files open</span>
+      </div>
+      <div class="flex space-x-3">
+        <div class="relative group">
+          <button id="new-file-btn" class="p-1 rounded hover:bg-gray-700" title="New File (Ctrl+N)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+          </button>
+          <div id="new-file-dropdown" class="absolute hidden bg-gray-800 border border-gray-700 rounded shadow-lg p-2 z-10 right-0 mt-1">
+            <div class="text-xs font-bold mb-1 text-gray-400">New file as:</div>
+            <div id="language-options"></div>
+          </div>
+        </div>
+        <button id="open-file-btn" class="p-1 rounded hover:bg-gray-700" title="Open File (Ctrl+O)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 8V5a2 2 0 0 1 2-2h7.5L19 7.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"></path>
+            <path d="M12 18v-6"></path>
+            <path d="m9 15 3-3 3 3"></path>
+          </svg>
+        </button>
+        <button id="save-file-btn" class="p-1 rounded hover:bg-gray-700" title="Save File (Ctrl+S)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+        </button>
+        <button id="theme-toggle-btn" class="p-1 rounded hover:bg-gray-700" title="Toggle Theme">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar -->
+      <div class="w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700">
+        <button id="open-folder-btn" class="sidebar-button" title="Open Folder">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+          </svg>
+        </button>
+        <button id="rename-file-btn" class="sidebar-button" title="Rename Current File">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+        <button id="preview-toggle-btn" class="sidebar-button" title="Toggle Preview">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+        <button id="terminal-toggle-btn" class="sidebar-button" title="Toggle Terminal">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+        </button>
+        <button id="run-code-sidebar-btn" class="sidebar-button" title="Run Code (F5)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+        <button id="download-project-btn" class="sidebar-button" title="Download Project">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Editor Area -->
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Tabs -->
+        <div id="tabs-container" class="flex border-b border-gray-700 overflow-x-auto"></div>
+        
+        <!-- Language Bar -->
+        <div id="language-bar" class="flex items-center p-2 bg-gray-800">
+          <span class="mr-2 text-sm">Language:</span>
+          <div id="language-selector" class="flex space-x-2 overflow-x-auto"></div>
+          
+          <!-- Link CSS file button (only visible for HTML files) -->
+          <div id="link-css-container" class="ml-auto hidden">
+            <button id="link-css-btn" class="px-2 py-1 bg-purple-600 text-white rounded text-xs flex items-center">
+              Link CSS File
+            </button>
+            <span id="linked-css-info" class="ml-2 text-xs hidden"></span>
+          </div>
+        </div>
+        
+        <!-- Editor and Preview Container -->
+        <div id="editor-preview-container" class="flex-1 flex overflow-hidden">
+          <!-- Code Editor -->
+          <div id="editor-area" class="relative w-full">
+            <div id="code-editor"></div>
+          </div>
+          
+          <!-- Preview panel (hidden by default) -->
+          <div id="preview-panel" class="hidden w-1/2 border-l border-gray-700 flex flex-col">
+            <div class="p-2 bg-gray-800 flex justify-between items-center">
+              <span class="text-sm font-medium">Live Preview</span>
+              <button id="refresh-preview-btn" class="px-2 py-1 bg-green-600 text-white rounded text-xs">
+                Refresh
+              </button>
+            </div>
+            <div class="flex-1 bg-white overflow-auto">
+              <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none;" title="Preview"></iframe>
+            </div>
+          </div>
+          
+          <!-- Terminal panel (hidden by default) -->
+          <div id="terminal-panel" class="hidden w-1/2 border-l border-gray-700 flex flex-col">
+            <div class="p-2 bg-gray-800 flex justify-between items-center">
+              <span class="text-sm font-medium">Terminal</span>
+              <div class="flex space-x-2">
+                <button id="clear-terminal-btn" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">
+                  Clear
+                </button>
+                <button id="run-code-btn" class="px-2 py-1 bg-green-600 text-white rounded text-xs flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" 
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Run
+                </button>
+              </div>
+            </div>
+            <div id="terminal" class="terminal flex-1 overflow-auto">
+              <div class="terminal-line">Welcome to GlowCode Terminal. Press Run to execute your code.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Status Bar -->
+    <div class="flex justify-between items-center px-4 py-1 text-sm bg-gray-800 text-gray-400">
+      <div>
+        <span id="cursor-position" class="mr-4">Line: 1, Col: 1</span>
+        <span>Spaces: 2</span>
+      </div>
+      <div>
+        <span id="language-indicator" class="px-2 py-1 rounded"></span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div id="toast" class="toast hidden"></div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Main data and state
+      let tabs = [];
+      let activeTab = null;
+      let showPreview = false;
+      let showTerminal = false;
+      let theme = 'dark';
+      let linkedFiles = {};
+      let pyodideInstance = null;
+      let pyodideLoading = false;
+      let codeEditorInstance = null;
+      
+      // Language definitions
+      const languages = [
+        { id: 'javascript', name: 'JavaScript', color: '#f7df1e', extensions: ['.js', '.jsx', '.ts', '.tsx'], mime: 'text/javascript' },
+        { id: 'python', name: 'Python', color: '#3572A5', extensions: ['.py'], mime: 'text/x-python' },
+        { id: 'rust', name: 'Rust', color: '#dea584', extensions: ['.rs'], mime: 'text/x-rustsrc' },
+        { id: 'go', name: 'Go', color: '#00ADD8', extensions: ['.go'], mime: 'text/x-go' },
+        { id: 'html', name: 'HTML', color: '#e34c26', extensions: ['.html', '.htm'], mime: 'text/html' },
+        { id: 'css', name: 'CSS', color: '#563d7c', extensions: ['.css'], mime: 'text/css' }
+      ];
+      
+      // DOM elements - with null checks
+      const tabsContainer = document.getElementById('tabs-container');
+      const languageSelector = document.getElementById('language-selector');
+      const previewPanel = document.getElementById('preview-panel');
+      const previewIframe = document.getElementById('preview-iframe');
+      const previewToggleBtn = document.getElementById('preview-toggle-btn');
+      const terminalPanel = document.getElementById('terminal-panel');
+      const terminal = document.getElementById('terminal');
+      const terminalToggleBtn = document.getElementById('terminal-toggle-btn');
+      const runCodeBtn = document.getElementById('run-code-btn');
+      const runCodeSidebarBtn = document.getElementById('run-code-sidebar-btn');
+      const clearTerminalBtn = document.getElementById('clear-terminal-btn');
+      const linkCssContainer = document.getElementById('link-css-container');
+      const linkedCssInfo = document.getElementById('linked-css-info');
+      const linkCssBtn = document.getElementById('link-css-btn');
+      const cursorPosition = document.getElementById('cursor-position');
+      const languageIndicator = document.getElementById('language-indicator');
+      const fileCounter = document.getElementById('file-counter');
+      const toast = document.getElementById('toast');
+      const newFileBtn = document.getElementById('new-file-btn');
+      const newFileDropdown = document.getElementById('new-file-dropdown');
+      const languageOptions = document.getElementById('language-options');
+      const openFileBtn = document.getElementById('open-file-btn');
+      const saveFileBtn = document.getElementById('save-file-btn');
+      const openFolderBtn = document.getElementById('open-folder-btn');
+      const renameFileBtn = document.getElementById('rename-file-btn');
+      const downloadProjectBtn = document.getElementById('download-project-btn');
+      const refreshPreviewBtn = document.getElementById('refresh-preview-btn');
+      const themeToggleBtn = document.getElementById('theme-toggle-btn');
+      const editorArea = document.getElementById('editor-area');
+      
+      // Initialize the editor
+      initEditor();
+      
+      // Setup function declarations for browser reference
+      window.writeToTerminalFromPython = function(text) {
+        writeToTerminal(text);
+      };
+      
+      function initEditor() {
+        if (!languageSelector) {
+          console.error("Language selector not found");
+          return;
+        }
+        
+        // Initialize CodeMirror
+        codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
+          lineNumbers: true,
+          theme: 'dracula',
+          mode: 'javascript',
+          indentUnit: 2,
+          tabSize: 2,
+          lineWrapping: false,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          styleActiveLine: true,
+          extraKeys: {
+            "Tab": function(cm) {
+              cm.replaceSelection("  ", "end");
+            }
+          }
+        });
+        
+        // Set height
+        codeEditorInstance.setSize("100%", "100%");
+        
+        // Add cursor position listener
+        codeEditorInstance.on("cursorActivity", function() {
+          const cursor = codeEditorInstance.getCursor();
+          if (cursorPosition) {
+            cursorPosition.textContent = `Line: ${cursor.line + 1}, Col: ${cursor.ch + 1}`;
+          }
+        });
+        
+        // Add change listener
+        codeEditorInstance.on("change", function() {
+          handleEditorInput();
+        });
+        
+        // Populate language options
+        languages.forEach(lang => {
+          // For language selector
+          const langBtn = document.createElement('div');
+          langBtn.className = 'language-badge';
+          langBtn.style.backgroundColor = lang.color;
+          langBtn.style.color = 'black';
+          langBtn.textContent = lang.name;
+          langBtn.dataset.language = lang.id;
+          languageSelector.appendChild(langBtn);
+          
+          if (languageOptions) {
+            // For new file dropdown
+            const option = document.createElement('div');
+            option.className = 'px-3 py-1 hover:bg-gray-700 cursor-pointer rounded text-sm flex items-center';
+            option.dataset.language = lang.id;
+            
+            const colorDot = document.createElement('div');
+            colorDot.className = 'w-2 h-2 rounded-full mr-2';
+            colorDot.style.backgroundColor = lang.color;
+            
+            option.appendChild(colorDot);
+            option.appendChild(document.createTextNode(lang.name));
+            languageOptions.appendChild(option);
+          }
+        });
+        
+        // Create a default tab
+        createNewTab('javascript');
+        
+        // Set up event listeners
+        setupEventListeners();
+      }
+      
+      function setupEventListeners() {
+        // Button events - with null checks
+        if (newFileBtn) newFileBtn.addEventListener('click', toggleNewFileDropdown);
+        if (openFileBtn) openFileBtn.addEventListener('click', openFile);
+        if (saveFileBtn) saveFileBtn.addEventListener('click', saveFile);
+        if (openFolderBtn) openFolderBtn.addEventListener('click', openFolder);
+        if (renameFileBtn) renameFileBtn.addEventListener('click', () => renameFile(activeTab));
+        if (downloadProjectBtn) downloadProjectBtn.addEventListener('click', downloadProject);
+        if (refreshPreviewBtn) refreshPreviewBtn.addEventListener('click', () => updatePreview(true));
+        if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+        if (previewToggleBtn) previewToggleBtn.addEventListener('click', togglePreview);
+        if (terminalToggleBtn) terminalToggleBtn.addEventListener('click', toggleTerminal);
+        if (linkCssBtn) linkCssBtn.addEventListener('click', linkCssFile);
+        if (runCodeBtn) runCodeBtn.addEventListener('click', runCode);
+        if (runCodeSidebarBtn) runCodeSidebarBtn.addEventListener('click', runCode);
+        if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
+        
+        // Language selector
+        if (languageSelector) {
+          languageSelector.addEventListener('click', function(e) {
+            const langBtn = e.target.closest('.language-badge');
+            if (langBtn) {
+              const language = langBtn.dataset.language;
+              if (language) {
+                changeLanguage(language);
+              }
+            }
+          });
+        }
+        
+        // New file dropdown
+        if (languageOptions) {
+          languageOptions.addEventListener('click', function(e) {
+            const option = e.target.closest('[data-language]');
+            if (option) {
+              const language = option.dataset.language;
+              if (language) {
+                createNewTab(language);
+                toggleNewFileDropdown();
+              }
+            }
+          });
+        }
+        
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+          if (newFileDropdown && !e.target.closest('#new-file-btn') && !e.target.closest('#new-file-dropdown')) {
+            newFileDropdown.classList.add('hidden');
+          }
+        });
+        
+        // F5 key for running code
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'F5') {
+            e.preventDefault();
+            runCode();
+          }
+          
+          // Ctrl+S for save
+          if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            saveFile();
+          }
+          
+          // Ctrl+N for new file
+          if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            toggleNewFileDropdown();
+          }
+          
+          // Ctrl+O for open file
+          if (e.key === 'o' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            openFile();
+          }
+        });
+      }
+      
+      function toggleNewFileDropdown() {
+        if (newFileDropdown) {
+          newFileDropdown.classList.toggle('hidden');
+        }
+      }
+      
+      function toggleTheme() {
+        theme = theme === 'dark' ? 'light' : 'dark';
+        const container = document.getElementById('editor-container');
+        
+        if (theme === 'dark') {
+          container.classList.remove('bg-gray-100', 'text-gray-800');
+          container.classList.add('bg-gray-900', 'text-gray-200');
+          if (codeEditorInstance) {
+            codeEditorInstance.setOption('theme', 'dracula');
+          }
+        } else {
+          container.classList.remove('bg-gray-900', 'text-gray-200');
+          container.classList.add('bg-gray-100', 'text-gray-800');
+          if (codeEditorInstance) {
+            codeEditorInstance.setOption('theme', 'default');
+          }
+        }
+      }
+      
+      function togglePreview() {
+        showPreview = !showPreview;
+        
+        // Update UI
+        if (previewToggleBtn) {
+          const svg = previewToggleBtn.querySelector('svg');
+          if (svg) {
+            if (showPreview) {
+              svg.classList.add('text-green-400');
+              svg.classList.remove('text-gray-400');
+            } else {
+              svg.classList.remove('text-green-400');
+              svg.classList.add('text-gray-400');
+            }
+          }
+        }
+        
+        // Hide terminal if showing
+        if (showTerminal && terminalPanel) {
+          showTerminal = false;
+          terminalPanel.classList.add('hidden');
+          if (terminalToggleBtn) {
+            const svg = terminalToggleBtn.querySelector('svg');
+            if (svg) {
+              svg.classList.remove('text-green-400');
+              svg.classList.add('text-gray-400');
+            }
+          }
+        }
+        
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // Show/hide preview based on language
+        if (showPreview && (tab.language === 'html' || tab.language === 'css') && previewPanel && editorArea) {
+          previewPanel.classList.remove('hidden');
+          editorArea.classList.remove('w-full');
+          editorArea.classList.add('w-1/2');
+          updatePreview(true);
+        } else if (previewPanel && editorArea) {
+          previewPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+        }
+      }
+      
+      function toggleTerminal() {
+        showTerminal = !showTerminal;
+        
+        // Update UI
+        if (terminalToggleBtn) {
+          const svg = terminalToggleBtn.querySelector('svg');
+          if (svg) {
+            if (showTerminal) {
+              svg.classList.add('text-green-400');
+              svg.classList.remove('text-gray-400');
+            } else {
+              svg.classList.remove('text-green-400');
+              svg.classList.add('text-gray-400');
+            }
+          }
+        }
+        
+        // Hide preview if showing
+        if (showPreview && previewPanel) {
+          showPreview = false;
+          previewPanel.classList.add('hidden');
+          if (previewToggleBtn) {
+            const svg = previewToggleBtn.querySelector('svg');
+            if (svg) {
+              svg.classList.remove('text-green-400');
+              svg.classList.add('text-gray-400');
+            }
+          }
+        }
+        
+        // Show/hide terminal
+        if (showTerminal && terminalPanel && editorArea) {
+          terminalPanel.classList.remove('hidden');
+          editorArea.classList.remove('w-full');
+          editorArea.classList.add('w-1/2');
+          
+          // Load Python interpreter if needed
+          loadPythonInterpreter();
+        } else if (terminalPanel && editorArea) {
+          terminalPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+        }
+      }
+      
+      // Load Python interpreter (Pyodide)
+      async function loadPythonInterpreter() {
+        if (pyodideInstance) return;
+        if (pyodideLoading) return;
+        
+        try {
+          pyodideLoading = true;
+          writeToTerminal("Loading Python interpreter (Pyodide)...");
+          
+          // Load Pyodide
+          if (typeof loadPyodide === 'function') {
+            pyodideInstance = await loadPyodide();
+            writeToTerminal("Python interpreter ready! You can now run Python code.", "success");
+          } else {
+            writeToTerminal("Pyodide not available. Make sure you're connected to the internet.", "error");
+          }
+          
+          pyodideLoading = false;
+        } catch (error) {
+          pyodideLoading = false;
+          writeToTerminal("Failed to load Pyodide: " + error.toString(), "error");
+        }
+      }
+      
+      // Write to terminal
+      function writeToTerminal(text, type = "") {
+        if (!terminal) return;
+        
+        const line = document.createElement('div');
+        line.className = `terminal-line ${type ? 'terminal-' + type : ''}`;
+        line.textContent = text;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+      
+      // Clear terminal
+      function clearTerminal() {
+        if (!terminal) return;
+        
+        terminal.innerHTML = '';
+        writeToTerminal("Terminal cleared.");
+      }
+      
+      // Run code in the active tab
+      async function runCode() {
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // If terminal is not visible, show it
+        if (!showTerminal) {
+          toggleTerminal();
+        }
+        
+        const code = tab.content;
+        const language = tab.language;
+        
+        // Only Python is supported for now
+        if (language !== 'python') {
+          writeToTerminal(`Running ${language} code is not supported yet. Only Python is currently supported.`, "error");
+          return;
+        }
+        
+        // Make sure the Python interpreter is loaded
+        await loadPythonInterpreter();
+        
+        writeToTerminal(`Running ${tab.name}...`, "success");
+        
+        try {
+          runPythonWithPyodide(code);
+        } catch (error) {
+          writeToTerminal(`Error: ${error.message}`, "error");
+        }
+      }
+      
+      // Run Python code with Pyodide
+      function runPythonWithPyodide(code) {
+        if (!pyodideInstance) {
+          writeToTerminal("Python interpreter not loaded yet.", "error");
+          return;
+        }
+        
+        try {
+          // Create a safer version of the code that avoids file I/O issues
+          let safeCode = code;
+          
+          // Set up proper stdout/stderr capture
+          pyodideInstance.runPython(`
+            import sys
+            import io
+            
+            class CustomOutput:
+                def __init__(self, terminal_func):
+                    self.terminal_func = terminal_func
+                    self.buffer = ""
+                
+                def write(self, text):
+                    self.buffer += text
+                    if text.endswith('\\n') or len(self.buffer) > 80:
+                        self.terminal_func(self.buffer)
+                        self.buffer = ""
+                    return len(text)
+                
+                def flush(self):
+                    if self.buffer:
+                        self.terminal_func(self.buffer)
+                        self.buffer = ""
+            
+            sys.stdout = CustomOutput(lambda x: None)
+            sys.stderr = CustomOutput(lambda x: None)
+          `);
+          
+          // Connect Python's stdout to our terminal
+          pyodideInstance.globals.set("js_write_to_terminal", function(text) {
+            writeToTerminal(text);
+          });
+          
+          pyodideInstance.globals.set("js_write_to_terminal_error", function(text) {
+            writeToTerminal(text, "error");
+          });
+          
+          // Update the stdout/stderr functions
+          pyodideInstance.runPython(`
+            sys.stdout.terminal_func = js_write_to_terminal
+            sys.stderr.terminal_func = js_write_to_terminal_error
+          `);
+          
+          // Run the user code with proper error handling
+          pyodideInstance.runPython(`
+try:
+    ${code.split('\n').join('\n    ')}
+except Exception as e:
+    import traceback
+    error_type = type(e).__name__
+    error_msg = str(e)
+    tb = traceback.format_exc()
+    print(f"\\n{error_type}: {error_msg}", file=sys.stderr)
+    if not error_msg.startswith("I/O"):  # Don't show internal I/O errors
+        print(f"\\nTraceback:\\n{tb}", file=sys.stderr)
+          `);
+          
+        } catch (error) {
+          writeToTerminal(`Error in execution: ${error.toString()}`, "error");
+        }
+      }
+      
+      // Handle editor input - now using CodeMirror
+      function handleEditorInput() {
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        tab.content = codeEditorInstance.getValue();
+        tab.isUnsaved = true;
+        renderTabs();
+        
+        // Update preview if showing
+        if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
+          updatePreview();
+        }
+      }
+      
+      // Update preview
+      function updatePreview(forceUpdate = false) {
+        if ((!showPreview && !forceUpdate) || !previewIframe) return;
+        
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+        
+        // For HTML files
+        if (tab.language === 'html') {
+          let htmlContent = tab.content;
+          
+          // Look for all CSS link tags in the HTML
+          const linkRegex = /<link[^>]*?href=["']([^"']+\.css)["'][^>]*?>/gi;
+          const styleLinks = [];
+          let match;
+          
+          // Find all CSS link references
+          while ((match = linkRegex.exec(htmlContent)) !== null) {
+            styleLinks.push(match[1]); // The CSS filename
+          }
+          
+          // If we found CSS links, process them
+          if (styleLinks.length > 0) {
+            // For each link, find the corresponding CSS tab
+            for (const cssFileName of styleLinks) {
+              // Find CSS file by name
+              const cssTab = tabs.find(t => 
+                t.language === 'css' && 
+                (t.name === cssFileName || t.displayName === cssFileName)
+              );
+              
+              if (cssTab) {
+                // Replace the link tag with a style tag containing the CSS content
+                const linkTag = new RegExp(`<link[^>]*?href=["']${cssFileName}["'][^>]*?>`, 'gi');
+                htmlContent = htmlContent.replace(linkTag, `<style>/* From: ${cssFileName} */\n${cssTab.content}\n</style>`);
+              }
+            }
+          } else {
+            // If there are no CSS links, check for linked files in memory
+            const linkedCssTabId = linkedFiles[activeTab];
+            const cssTab = linkedCssTabId ? tabs.find(t => t.id === linkedCssTabId) : null;
+            
+            // If there's linked CSS but no link tag, add the styles for preview only
+            if (cssTab && !htmlContent.includes('<style>')) {
+              if (htmlContent.includes('</head>')) {
+                htmlContent = htmlContent.replace('</head>', `<style>/* Preview only */\n${cssTab.content}\n</style></head>`);
+              } else if (htmlContent.includes('<body>')) {
+                htmlContent = htmlContent.replace('<body>', `<style>/* Preview only */\n${cssTab.content}\n</style><body>`);
+              } else {
+                htmlContent = `<style>/* Preview only */\n${cssTab.content}\n</style>${htmlContent}`;
+              }
+            }
+          }
+          
+          iframeDoc.open();
+          iframeDoc.write(htmlContent);
+          iframeDoc.close();
+        } 
+        // For CSS files
+        else if (tab.language === 'css') {
+          // Check if this CSS file is linked to any HTML file
+          let linkedToHtml = false;
+          let htmlTabToPreview = null;
+          
+          // First check explicit links made using the link button
+          for (let [htmlTabId, cssTabId] of Object.entries(linkedFiles)) {
+            if (cssTabId === tab.id) {
+              const htmlTab = tabs.find(t => t.id.toString() === htmlTabId);
+              if (htmlTab && htmlTab.language === 'html') {
+                linkedToHtml = true;
+                htmlTabToPreview = htmlTab;
+                break;
+              }
+            }
+          }
+          
+          // If no explicit link found, check for <link> tags in HTML files
+          if (!linkedToHtml) {
+            const htmlTabs = tabs.filter(t => t.language === 'html');
+            for (const htmlTab of htmlTabs) {
+              const linkRegex = new RegExp(`<link[^>]*?href=["']${tab.name}["'][^>]*?>`, 'gi');
+              if (linkRegex.test(htmlTab.content)) {
+                linkedToHtml = true;
+                htmlTabToPreview = htmlTab;
+                break;
+              }
+            }
+          }
+          
+          // If linked to HTML, show that HTML file with current CSS content
+          if (linkedToHtml && htmlTabToPreview) {
+            let htmlContent = htmlTabToPreview.content;
+            
+            // Replace the link to this CSS with a style tag containing current CSS content
+            const linkRegex = new RegExp(`<link[^>]*?href=["']${tab.name}["'][^>]*?>`, 'gi');
+            if (linkRegex.test(htmlContent)) {
+              htmlContent = htmlContent.replace(linkRegex, `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style>`);
+            } 
+            // If there's no link tag but we know they're linked, insert the CSS
+            else if (!htmlContent.includes(`<style>/* From: ${tab.name}`)) {
+              if (htmlContent.includes('</head>')) {
+                htmlContent = htmlContent.replace('</head>', `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style></head>`);
+              } else if (htmlContent.includes('<body>')) {
+                htmlContent = htmlContent.replace('<body>', `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style><body>`);
+              } else {
+                htmlContent = `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style>${htmlContent}`;
+              }
+            }
+            
+            iframeDoc.open();
+            iframeDoc.write(htmlContent);
+            iframeDoc.close();
+          }
+          // If not linked to any HTML, show the generic CSS preview
+          else {
+            iframeDoc.open();
+            
+            // Write HTML parts separately
+            iframeDoc.write('<!DOCTYPE html><html><head>');
+            iframeDoc.write('<style>' + tab.content + '</style>');
+            iframeDoc.write('</head><body>');
+            iframeDoc.write('<div style="padding: 20px;">');
+            iframeDoc.write('<h1>CSS Preview</h1>');
+            iframeDoc.write('<p>This is a paragraph with <a href="#">a link</a>.</p>');
+            iframeDoc.write('<div class="container">');
+            iframeDoc.write('<h2>Sample Container</h2>');
+            iframeDoc.write('<button>Button</button>');
+            iframeDoc.write('<ul>');
+            iframeDoc.write('<li>List item 1</li>');
+            iframeDoc.write('<li>List item 2</li>');
+            iframeDoc.write('<li>List item 3</li>');
+            iframeDoc.write('</ul>');
+            iframeDoc.write('<div class="box">Box with class "box"</div>');
+            iframeDoc.write('</div>');
+            iframeDoc.write('<footer>Footer content</footer>');
+            iframeDoc.write('</div>');
+            iframeDoc.write('</body></html>');
+            
+            iframeDoc.close();
+          }
+        }
+      }
+      
+      // Create a new tab
+      function createNewTab(language) {
+        const id = Date.now();
+        const extension = getFileExtensionForLanguage(language);
+        const content = getTemplateForLanguage(language);
+        
+        const tab = {
+          id: id,
+          name: `untitled${extension}`,
+          displayName: `untitled${extension}`,
+          language: language,
+          content: content,
+          isUnsaved: true,
+          fileHandle: null
+        };
+        
+        tabs.push(tab);
+        renderTabs();
+        setActiveTab(id);
+        showToast(`Created new ${languages.find(l => l.id === language).name} file`);
+      }
+      
+      // Set active tab
+      function setActiveTab(id) {
+        const tab = tabs.find(t => t.id === id);
+        if (!tab) return;
+        
+        activeTab = id;
+        
+        // Update CodeMirror with the content and language mode
+        if (codeEditorInstance) {
+          codeEditorInstance.setValue(tab.content);
+          
+          // Set appropriate language mode
+          const langInfo = languages.find(l => l.id === tab.language);
+          if (langInfo) {
+            codeEditorInstance.setOption('mode', langInfo.mime);
+          }
+        }
+        
+        updateLanguageUI(tab.language);
+        renderTabs();
+        
+        // Show/hide CSS link button
+        if (tab.language === 'html' && linkCssContainer) {
+          linkCssContainer.classList.remove('hidden');
+          updateLinkedCssInfo();
+        } else if (linkCssContainer) {
+          linkCssContainer.classList.add('hidden');
+        }
+        
+        // Update preview if needed
+        if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
+          updatePreview(true);
+        } else if (showPreview && previewPanel && editorArea) {
+          previewPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+        }
+      }
+      
+      // Render tabs
+      function renderTabs() {
+        if (!tabsContainer) return;
+        
+        tabsContainer.innerHTML = '';
+        
+        tabs.forEach(tab => {
+          const tabElement = document.createElement('div');
+          tabElement.className = `tab ${tab.id === activeTab ? 'active' : ''}`;
+          
+          // Color badge
+          const badge = document.createElement('div');
+          badge.className = 'file-badge';
+          badge.style.backgroundColor = getLanguageColor(tab.language);
+          tabElement.appendChild(badge);
+          
+          // File name container
+          const nameContainer = document.createElement('div');
+          nameContainer.className = 'tab-name-container';
+          nameContainer.title = tab.path ? `${tab.path}/${tab.name}` : tab.name;
+          
+          if (tab.path) {
+            const pathSpan = document.createElement('span');
+            pathSpan.className = 'text-xs text-gray-500 mr-1';
+            pathSpan.textContent = tab.path + '/';
+            nameContainer.appendChild(pathSpan);
+          }
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = tab.displayName || tab.name;
+          nameContainer.appendChild(nameSpan);
+          
+          // Unsaved indicator
+          if (tab.isUnsaved) {
+            const unsavedDot = document.createElement('div');
+            unsavedDot.className = 'unsaved-indicator ml-2';
+            nameContainer.appendChild(unsavedDot);
+          }
+          
+          tabElement.appendChild(nameContainer);
+          
+          // Action buttons
+          const actions = document.createElement('div');
+          actions.className = 'tab-actions';
+          
+          // Rename button
+          const renameBtn = document.createElement('button');
+          renameBtn.className = 'tab-action-btn';
+          renameBtn.innerHTML = '✎';
+          renameBtn.title = 'Rename';
+          renameBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renameFile(tab.id);
+          });
+          
+          // Close button
+          const closeBtn = document.createElement('button');
+          closeBtn.className = 'tab-action-btn';
+          closeBtn.innerHTML = '×';
+          closeBtn.title = 'Close';
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeTab(tab.id);
+          });
+          
+          actions.appendChild(renameBtn);
+          actions.appendChild(closeBtn);
+          tabElement.appendChild(actions);
+          
+          // Tab click handler
+          tabElement.addEventListener('click', () => setActiveTab(tab.id));
+          
+          tabsContainer.appendChild(tabElement);
+        });
+        
+        // Update file counter
+        if (fileCounter) {
+          fileCounter.textContent = tabs.length > 0 ? `${tabs.length} files open` : 'No files open';
+        }
+      }
+      
+      // Close tab
+      function closeTab(id) {
+        const tab = tabs.find(t => t.id === id);
+        if (!tab) return;
+        
+        // Confirm if unsaved
+        if (tab.isUnsaved) {
+          if (!confirm(`${tab.name} has unsaved changes. Close anyway?`)) {
+            return;
+          }
+        }
+        
+        // Remove tab
+        tabs = tabs.filter(t => t.id !== id);
+        
+        // If closing active tab, switch to another
+        if (id === activeTab && tabs.length > 0) {
+          const index = tabs.findIndex(t => t.id === id);
+          const newTab = tabs[index === 0 ? 0 : index - 1];
+          setActiveTab(newTab.id);
+        } else if (tabs.length === 0) {
+          // If no tabs left, create a new one
+          createNewTab('javascript');
+        }
+        
+        renderTabs();
+      }
+      
+      // Update language UI
+      function updateLanguageUI(language) {
+        if (!languageSelector || !languageIndicator) return;
+        
+        // Update language selector
+        const allBadges = languageSelector.querySelectorAll('.language-badge');
+        allBadges.forEach(badge => {
+          if (badge.dataset.language === language) {
+            badge.style.boxShadow = `0 0 8px ${getLanguageColor(language)}`;
+            badge.style.fontWeight = 'bold';
+          } else {
+            badge.style.boxShadow = 'none';
+            badge.style.fontWeight = 'normal';
+          }
+        });
+        
+        // Update status bar
+        const color = getLanguageColor(language);
+        languageIndicator.style.backgroundColor = color;
+        languageIndicator.style.color = 'black';
+        languageIndicator.style.boxShadow = `0 0 5px ${color}`;
+        languageIndicator.textContent = languages.find(l => l.id === language)?.name || 'Unknown';
+      }
+      
+      // Change language
+      function changeLanguage(language) {
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // Get current file info
+        let updatedContent = tab.content;
+        let updatedName = tab.name;
+        
+        // Update extension if untitled
+        if (updatedName.startsWith('untitled.') || !updatedContent.trim()) {
+          updatedName = 'untitled' + getFileExtensionForLanguage(language);
+        }
+        
+        // Apply template if empty
+        const isBasicComment = 
+          updatedContent.trim() === '// Start typing your code here...' ||
+          updatedContent.trim() === '# Start typing your code here...';
+          
+        if (!updatedContent.trim() || isBasicComment) {
+          updatedContent = getTemplateForLanguage(language);
+        }
+        
+        // Update tab
+        tab.language = language;
+        tab.name = updatedName;
+        tab.displayName = updatedName;
+        tab.content = updatedContent;
+        tab.isUnsaved = true;
+        
+        // Update UI including CodeMirror
+        if (codeEditorInstance) {
+          codeEditorInstance.setValue(updatedContent);
+          
+          // Set appropriate language mode
+          const langInfo = languages.find(l => l.id === language);
+          if (langInfo) {
+            codeEditorInstance.setOption('mode', langInfo.mime);
+          }
+        }
+        
+        updateLanguageUI(language);
+        renderTabs();
+        
+        // Show/hide CSS link button
+        if (language === 'html' && linkCssContainer) {
+          linkCssContainer.classList.remove('hidden');
+          updateLinkedCssInfo();
+        } else if (linkCssContainer) {
+          linkCssContainer.classList.add('hidden');
+        }
+        
+        // Update preview if needed
+        if (showPreview && (language === 'html' || language === 'css')) {
+          updatePreview(true);
+        } else if (showPreview && previewPanel && editorArea) {
+          previewPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+          
+          // Toggle preview off
+          showPreview = false;
+          if (previewToggleBtn) {
+            const svg = previewToggleBtn.querySelector('svg');
+            if (svg) {
+              svg.classList.remove('text-green-400');
+              svg.classList.add('text-gray-400');
+            }
+          }
+        }
+      }
+      
+      // Link CSS file
+      function linkCssFile() {
+        // Get all CSS tabs
+        const cssTabs = tabs.filter(t => t.language === 'css');
+        
+        if (cssTabs.length === 0) {
+          showToast("Create a CSS file first to link it");
+          return;
+        }
+        
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab || tab.language !== 'html') return;
+        
+        // If only one CSS file, use it automatically
+        if (cssTabs.length === 1) {
+          const cssTab = cssTabs[0];
+          addCssLinkToHtml(tab, cssTab);
+          linkedFiles[activeTab] = cssTab.id;
+          updateLinkedCssInfo();
+          updatePreview(true);
+          showToast(`Linked ${cssTab.name} to current file`);
+          return;
+        }
+        
+        // Otherwise show dialog to choose
+        const cssTabId = prompt(
+          "Enter the number of the CSS file to link:\n" + 
+          cssTabs.map((tab, i) => `${i+1}. ${tab.name}`).join('\n')
+        );
+        
+        if (cssTabId && !isNaN(cssTabId) && parseInt(cssTabId) > 0 && parseInt(cssTabId) <= cssTabs.length) {
+          const selectedTab = cssTabs[parseInt(cssTabId) - 1];
+          addCssLinkToHtml(tab, selectedTab);
+          linkedFiles[activeTab] = selectedTab.id;
+          updateLinkedCssInfo();
+          updatePreview(true);
+          showToast(`Linked ${selectedTab.name} to current file`);
+        }
+      }
+      
+      // Add CSS link to HTML file
+      function addCssLinkToHtml(htmlTab, cssTab) {
+        const htmlContent = htmlTab.content;
+        let updatedContent = htmlContent;
+        const cssFileName = cssTab.displayName || cssTab.name;
+        const linkMode = confirm("Do you want to:\n\nOK: Add a <link> tag (recommended for separate files)\nCancel: Embed CSS with a <style> tag (for single file export)");
+        
+        // Remove any existing link to this CSS file
+        const linkRegex = new RegExp(`<link[^>]*?href=["']${cssFileName}["'][^>]*?>`, 'gi');
+        updatedContent = updatedContent.replace(linkRegex, '');
+        
+        // Find </head> tag
+        if (updatedContent.includes('</head>')) {
+          if (linkMode) {
+            // Add <link> tag
+            updatedContent = updatedContent.replace('</head>', `  <link rel="stylesheet" href="${cssFileName}">\n</head>`);
+          } else {
+            // Add <style> tag with embedded CSS
+            updatedContent = updatedContent.replace('</head>', `  <style>\n${cssTab.content}\n  </style>\n</head>`);
+          }
+        } 
+        // If no </head> tag, try to insert before <body>
+        else if (updatedContent.includes('<body>')) {
+          if (linkMode) {
+            updatedContent = updatedContent.replace('<body>', `<head>\n  <link rel="stylesheet" href="${cssFileName}">\n</head>\n<body>`);
+          } else {
+            updatedContent = updatedContent.replace('<body>', `<head>\n  <style>\n${cssTab.content}\n  </style>\n</head>\n<body>`);
+          }
+        }
+        // Last resort: add at the beginning
+        else {
+          if (linkMode) {
+            updatedContent = `<head>\n  <link rel="stylesheet" href="${cssFileName}">\n</head>\n${updatedContent}`;
+          } else {
+            updatedContent = `<head>\n  <style>\n${cssTab.content}\n  </style>\n</head>\n${updatedContent}`;
+          }
+        }
+        
+        // Update HTML content
+        htmlTab.content = updatedContent;
+        htmlTab.isUnsaved = true;
+        
+        // Update CodeMirror
+        if (htmlTab.id === activeTab && codeEditorInstance) {
+          codeEditorInstance.setValue(updatedContent);
+        }
+        
+        renderTabs();
+      }
+      
+      // Update linked CSS info
+      function updateLinkedCssInfo() {
+        if (!linkedCssInfo) return;
+        
+        const linkedCssTabId = linkedFiles[activeTab];
+        if (linkedCssTabId) {
+          const cssTab = tabs.find(t => t.id === linkedCssTabId);
+          if (cssTab) {
+            linkedCssInfo.textContent = `Linked: ${cssTab.name}`;
+            linkedCssInfo.classList.remove('hidden');
+            if (linkCssBtn) linkCssBtn.textContent = 'Change Linked CSS';
+          } else {
+            // Linked file no longer exists
+            delete linkedFiles[activeTab];
+            linkedCssInfo.classList.add('hidden');
+            if (linkCssBtn) linkCssBtn.textContent = 'Link CSS File';
+          }
+        } else {
+          linkedCssInfo.classList.add('hidden');
+          if (linkCssBtn) linkCssBtn.textContent = 'Link CSS File';
+        }
+      }
+      
+      // Update HTML links when CSS file is renamed
+      function updateHtmlLinksAfterCssRename(oldCssName, newCssName) {
+        // Find all HTML tabs
+        const htmlTabs = tabs.filter(t => t.language === 'html');
+        
+        // For each HTML tab, check if it links to the renamed CSS file
+        htmlTabs.forEach(htmlTab => {
+          const htmlContent = htmlTab.content;
+          
+          // Look for link tags with the old CSS filename
+          const linkRegex = new RegExp(`<link[^>]*?href=["']${oldCssName}["'][^>]*?>`, 'gi');
+          
+          if (linkRegex.test(htmlContent)) {
+            // Replace the old CSS filename with the new one
+            const updatedContent = htmlContent.replace(
+              new RegExp(`href=["']${oldCssName}["']`, 'gi'), 
+              `href="${newCssName}"`
+            );
+            
+            // Update the HTML tab content
+            htmlTab.content = updatedContent;
+            htmlTab.isUnsaved = true;
+            
+            // Update CodeMirror
+            if (htmlTab.id === activeTab && codeEditorInstance) {
+              codeEditorInstance.setValue(updatedContent);
+            }
+            
+            showToast(`Updated link in ${htmlTab.name} to reference ${newCssName}`);
+          }
+        });
+        
+        // Refresh tabs to show unsaved indicators
+        renderTabs();
+      }
+      
+      // Rename file
+      function renameFile(id) {
+        const tab = tabs.find(t => t.id === id);
+        if (!tab) return;
+        
+        // Get current name and extension
+        const currentName = tab.displayName || tab.name;
+        const currentExtension = '.' + currentName.split('.').pop();
+        const currentBaseName = currentName.substring(0, currentName.length - currentExtension.length);
+        
+        // Prompt for new name
+        const newName = prompt(`Rename file: ${currentName}`, currentBaseName);
+        
+        if (!newName || newName.trim() === '') return;
+        
+        // Make sure name has extension
+        let finalName = newName;
+        if (!finalName.includes('.')) {
+          finalName += currentExtension;
+        }
+        
+        // Determine language from extension
+        const newExtension = '.' + finalName.split('.').pop().toLowerCase();
+        const newLanguage = languages.find(lang => 
+          lang.extensions.includes(newExtension)
+        )?.id || tab.language;
+        
+        // Special handling: If renaming a CSS file, update any HTML files that link to it
+        if (tab.language === 'css') {
+          updateHtmlLinksAfterCssRename(currentName, finalName);
+        }
+        
+        // Update tab
+        tab.name = finalName;
+        tab.displayName = finalName;
+        tab.language = newLanguage;
+        tab.isUnsaved = true;
+        
+        renderTabs();
+        
+        // If renaming active tab, update UI
+        if (id === activeTab) {
+          updateLanguageUI(newLanguage);
+          
+          // Update CodeMirror mode if language changed
+          if (newLanguage !== tab.language && codeEditorInstance) {
+            const langInfo = languages.find(l => l.id === newLanguage);
+            if (langInfo) {
+              codeEditorInstance.setOption('mode', langInfo.mime);
+            }
+          }
+        }
+        
+        showToast(`Renamed to ${finalName}`);
+      }
+      
+      // Functions for file operations - placeholder implementations
+      async function openFile() {
+        try {
+          // Create a file input element
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.multiple = true; // Allow multiple file selection
+          fileInput.accept = '.html,.htm,.css,.js,.py,.rs,.go'; // Accept web development files
+          
+          // Handle file selection
+          fileInput.onchange = async (e) => {
+            const files = e.target.files;
+            
+            if (!files || files.length === 0) {
+              return;
+            }
+            
+            // Track how many files were successfully opened
+            let openedCount = 0;
+            
+            // Process each selected file
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const fileName = file.name;
+              const fileExtension = '.' + fileName.split('.').pop().toLowerCase();
+              
+              // Find appropriate language based on file extension
+              const language = languages.find(lang => 
+                lang.extensions.includes(fileExtension)
+              )?.id;
+              
+              // Skip files with unsupported extensions
+              if (!language) {
+                continue;
+              }
+              
+              try {
+                // Read file content
+                const content = await readFileContent(file);
+                
+                // Create a new tab for this file
+                const id = Date.now() + i; // Ensure unique ID
+                const tab = {
+                  id: id,
+                  name: fileName,
+                  displayName: fileName,
+                  language: language,
+                  content: content,
+                  isUnsaved: false,
+                  fileHandle: null
+                };
+                
+                // Add path info if available (from directory structure)
+                if (file.webkitRelativePath) {
+                  const pathParts = file.webkitRelativePath.split('/');
+                  if (pathParts.length > 1) {
+                    pathParts.pop(); // Remove filename
+                    tab.path = pathParts.join('/');
+                  }
+                }
+                
+                tabs.push(tab);
+                openedCount++;
+                
+                // Set as active tab if it's the first one
+                if (i === 0) {
+                  setActiveTab(id);
+                }
+              } catch (error) {
+                console.error(`Error reading file ${fileName}:`, error);
+              }
+            }
+            
+            // Update UI
+            renderTabs();
+            
+            if (openedCount > 0) {
+              showToast(`Opened ${openedCount} file${openedCount > 1 ? 's' : ''}`);
+            } else {
+              showToast("No supported files were selected");
+            }
+          };
+          
+          // Trigger file selection dialog
+          fileInput.click();
+        } catch (error) {
+          console.error("Error opening folder:", error);
+          showToast("Error opening folder");
+        }
+      }
+      
+      // Helper function to read file content
+      function readFileContent(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          
+          reader.onload = (event) => {
+            resolve(event.target.result);
+          };
+          
+          reader.onerror = (error) => {
+            reject(error);
+          };
+          
+          reader.readAsText(file);
+        });
+      }
+      
+      // Save file
+      async function saveFile() {
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // Save file content to disk
+        const blob = new Blob([tab.content], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = tab.name;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        
+        // Mark file as saved
+        tab.isUnsaved = false;
+        renderTabs();
+        
+        showToast(`Saved ${tab.name}`);
+      }
+      
+      // Open folder - allows selecting a directory
+      async function openFolder() {
+        try {
+          // Create a file input element with directory selection
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          
+          // Support directory selection
+          fileInput.webkitdirectory = true;
+          fileInput.directory = true;
+          fileInput.multiple = true;
+          
+          // Handle file selection
+          fileInput.onchange = async (e) => {
+            const files = e.target.files;
+            
+            if (!files || files.length === 0) {
+              return;
+            }
+            
+            // Sort files to maintain folder structure
+            const sortedFiles = Array.from(files).sort((a, b) => 
+              a.webkitRelativePath.localeCompare(b.webkitRelativePath)
+            );
+            
+            // Track how many files were successfully opened
+            let openedCount = 0;
+            let skippedCount = 0;
+            
+            // Process each selected file
+            for (let i = 0; i < sortedFiles.length; i++) {
+              const file = sortedFiles[i];
+              const fileName = file.name;
+              const fileExtension = '.' + fileName.split('.').pop().toLowerCase();
+              
+              // Find appropriate language based on file extension
+              const language = languages.find(lang => 
+                lang.extensions.includes(fileExtension)
+              )?.id;
+              
+              // Skip files with unsupported extensions
+              if (!language) {
+                skippedCount++;
+                continue;
+              }
+              
+              try {
+                // Read file content
+                const content = await readFileContent(file);
+                
+                // Create a new tab for this file
+                const id = Date.now() + i; // Ensure unique ID
+                
+                // Extract path information from webkitRelativePath
+                let path = '';
+                if (file.webkitRelativePath) {
+                  const pathParts = file.webkitRelativePath.split('/');
+                  if (pathParts.length > 1) {
+                    pathParts.pop(); // Remove filename
+                    path = pathParts.join('/');
+                  }
+                }
+                
+                const tab = {
+                  id: id,
+                  name: fileName,
+                  displayName: fileName,
+                  path: path,
+                  language: language,
+                  content: content,
+                  isUnsaved: false,
+                  fileHandle: null
+                };
+                
+                tabs.push(tab);
+                openedCount++;
+                
+                // Set as active tab if it's the first valid file
+                if (openedCount === 1) {
+                  setActiveTab(id);
+                }
+              } catch (error) {
+                console.error(`Error reading file ${fileName}:`, error);
+              }
+            }
+            
+            // Update UI
+            renderTabs();
+            
+            if (openedCount > 0) {
+              showToast(`Opened ${openedCount} file${openedCount > 1 ? 's' : ''} from folder`);
+              if (skippedCount > 0) {
+                console.log(`Skipped ${skippedCount} unsupported file(s)`);
+              }
+            } else {
+              showToast("No supported files were found in the folder");
+            }
+          };
+          
+          // Trigger file selection dialog
+          fileInput.click();
+        } catch (error) {
+          console.error("Error opening folder:", error);
+          showToast("Error opening folder");
+        }
+      }
+      
+      // Download project as ZIP file
+      async function downloadProject() {
+        if (tabs.length === 0) {
+          showToast("No files to download");
+          return;
+        }
+        
+        try {
+          // Create a new JSZip instance
+          const zip = new JSZip();
+          
+          // Add all open files to the zip
+          tabs.forEach(tab => {
+            zip.file(tab.name, tab.content);
+          });
+          
+          // Generate the zip file
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          
+          // Create a download link
+          const downloadLink = document.createElement("a");
+          downloadLink.href = URL.createObjectURL(zipBlob);
+          downloadLink.download = "glowcode-project.zip";
+          
+          // Add to document, click and remove
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          
+          showToast("Project downloaded successfully");
+        } catch (error) {
+          console.error("Error downloading project:", error);
+          showToast("Error downloading project");
+        }
+      }
+      
+      // Show toast notification
+      function showToast(message) {
+        if (!toast) return;
+        
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+      
+      // Get template for language
+      function getTemplateForLanguage(language) {
+        switch(language) {
+          case 'html':
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+</html>`;
+          case 'css':
+            return `/* Styles for your document */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+`;
+          case 'javascript':
+            return `// JavaScript code
+console.log('Hello, world!');
+
+function init() {
+  // Your initialization code here
+}
+`;
+          case 'python':
+            return `# Python script
+
+def main():
+    # Print a simple greeting
+    print("Hello, world!")
+    
+    # Some basic Python examples
+    numbers = [1, 2, 3, 4, 5]
+    squared = [n**2 for n in numbers]
+    print(f"Original numbers: {numbers}")
+    print(f"Squared numbers: {squared}")
+    
+    # String operations
+    message = "Python in the browser!"
+    print(f"Message: {message}")
+    print(f"Uppercase: {message.upper()}")
+    print(f"Character count: {len(message)}")
+
+# Call the main function
+main()
+`;
+          case 'rust':
+            return `// Rust program
+
+fn main() {
+    println!("Hello, world!");
+}
+`;
+          case 'go':
+            return `// Go program
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, world!")
+}
+`;
+          default:
+            return '// Start typing your code here...';
+        }
+      }
+      
+      // Get file extension for language
+      function getFileExtensionForLanguage(language) {
+        switch(language) {
+          case 'javascript': return '.js';
+          case 'python': return '.py';
+          case 'rust': return '.rs';
+          case 'go': return '.go';
+          case 'html': return '.html';
+          case 'css': return '.css';
+          default: return '.txt';
+        }
+      }
+      
+      // Get language color
+      function getLanguageColor(language) {
+        return languages.find(l => l.id === language)?.color || '#ffffff';
+      }
+    });
+  </script>
+</body>
+</html>
