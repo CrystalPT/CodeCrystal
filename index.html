@@ -302,7 +302,8 @@
             <polyline points="7 3 7 8 15 8"></polyline>
           </svg>
         </button>
-        <button id="theme-toggle-btn" class="p-1 rounded hover:bg-gray-700" title="Toggle Theme">
+        <!-- Settings Button -->
+        <button id="settings-btn" class="p-1 rounded hover:bg-gray-700" title="Settings">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
@@ -438,6 +439,163 @@
   <!-- Toast Container -->
   <div id="toast" class="toast hidden"></div>
   
+  <!-- Add Settings Modal HTML before the Toast Container -->
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="fixed inset-0 flex items-center justify-center hidden z-50">
+    <div class="fixed inset-0 bg-black opacity-50" id="settings-backdrop"></div>
+    <div class="bg-gray-800 rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto relative z-10">
+      <div class="flex justify-between items-center p-4 border-b border-gray-700">
+        <h2 class="text-xl font-bold">CodeCrystal Settings</h2>
+        <button id="close-settings-btn" class="text-gray-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="p-4">
+        <!-- Settings Tabs -->
+        <div class="flex border-b border-gray-700 mb-4">
+          <button class="settings-tab-btn px-4 py-2 text-blue-400 border-b-2 border-blue-400" data-tab="theme">Theme</button>
+          <button class="settings-tab-btn px-4 py-2 text-gray-400" data-tab="editor">Editor</button>
+          <button class="settings-tab-btn px-4 py-2 text-gray-400" data-tab="colors">Syntax Colors</button>
+        </div>
+        
+        <!-- Theme Settings -->
+        <div class="settings-tab-content" id="theme-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Editor Theme</h3>
+            <div class="flex space-x-2">
+              <button class="theme-option px-4 py-2 rounded bg-gray-700 text-white" data-theme="dark">Dark</button>
+              <button class="theme-option px-4 py-2 rounded bg-gray-400 text-gray-800" data-theme="light">Light</button>
+              <button class="theme-option px-4 py-2 rounded bg-purple-900 text-white" data-theme="cosmic">Cosmic</button>
+              <button class="theme-option px-4 py-2 rounded bg-blue-900 text-white" data-theme="ocean">Ocean</button>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Accent Color</h3>
+            <div class="flex items-center space-x-3">
+              <input type="color" id="accent-color-picker" value="#8b5cf6" class="w-12 h-12 rounded cursor-pointer">
+              <span class="text-sm text-gray-400">This color will be used for UI highlights</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Editor Settings -->
+        <div class="settings-tab-content hidden" id="editor-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Font Size</h3>
+            <div class="flex items-center">
+              <input type="range" id="font-size-slider" min="10" max="24" value="14" class="w-full mr-3">
+              <span id="font-size-value" class="text-gray-300 w-10">14px</span>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Tab Size</h3>
+            <div class="flex space-x-2">
+              <button class="tab-size-btn px-3 py-1 rounded bg-gray-700" data-size="2">2 spaces</button>
+              <button class="tab-size-btn px-3 py-1 rounded bg-gray-700" data-size="4">4 spaces</button>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Other Options</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" id="line-wrap-checkbox" class="mr-2">
+                <span>Enable line wrapping</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="line-numbers-checkbox" checked class="mr-2">
+                <span>Show line numbers</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Syntax Colors Settings -->
+        <div class="settings-tab-content hidden" id="colors-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Syntax Highlighting</h3>
+            <p class="text-sm text-gray-400 mb-4">Customize the syntax highlighting colors for all languages</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Keywords</label>
+                  <input type="color" class="syntax-color-picker" data-element="keyword" value="#ff9d00">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="keyword-example">function</code> <code>return</code> <code>if</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Strings</label>
+                  <input type="color" class="syntax-color-picker" data-element="string" value="#7ec699">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="string-example">"Hello, world!"</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Variables</label>
+                  <input type="color" class="syntax-color-picker" data-element="variable" value="#e06c75">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="variable-example">myVariable</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Numbers</label>
+                  <input type="color" class="syntax-color-picker" data-element="number" value="#7fcef5">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="number-example">42</code> <code>3.14</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Comments</label>
+                  <input type="color" class="syntax-color-picker" data-element="comment" value="#676e95">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="comment-example">// This is a comment</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Functions</label>
+                  <input type="color" class="syntax-color-picker" data-element="def" value="#c792ea">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="function-example">myFunction()</code>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <button id="reset-colors-btn" class="px-3 py-1 bg-red-600 text-white rounded">Reset to Defaults</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-end p-4 border-t border-gray-700">
+        <button id="save-settings-btn" class="px-4 py-2 bg-blue-600 text-white rounded">Save Settings</button>
+      </div>
+    </div>
+  </div>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Main data and state
@@ -450,6 +608,24 @@
       let pyodideInstance = null;
       let pyodideLoading = false;
       let codeEditorInstance = null;
+      
+      // Add user settings object
+      let userSettings = {
+        theme: 'dark',
+        accentColor: '#8b5cf6',
+        fontSize: 14,
+        tabSize: 2,
+        lineWrap: false,
+        lineNumbers: true,
+        syntaxColors: {
+          keyword: '#ff9d00',
+          string: '#7ec699',
+          variable: '#e06c75',
+          number: '#7fcef5',
+          comment: '#676e95',
+          def: '#c792ea'
+        }
+      };
       
       // Language definitions
       const languages = [
@@ -492,428 +668,118 @@
       const themeToggleBtn = document.getElementById('theme-toggle-btn');
       const editorArea = document.getElementById('editor-area');
       
-      // Initialize the editor
-      initEditor();
-      
       // Setup function declarations for browser reference
       window.writeToTerminalFromPython = function(text) {
         writeToTerminal(text);
       };
       
-      function initEditor() {
-        if (!languageSelector) {
-          console.error("Language selector not found");
-          return;
-        }
+      // Show toast notification
+      function showToast(message) {
+        if (!toast) return;
         
-        // Initialize CodeMirror
-        codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
-          lineNumbers: true,
-          theme: 'dracula',
-          mode: 'javascript',
-          indentUnit: 2,
-          tabSize: 2,
-          lineWrapping: false,
-          autoCloseBrackets: true,
-          matchBrackets: true,
-          styleActiveLine: true,
-          extraKeys: {
-            "Tab": function(cm) {
-              cm.replaceSelection("  ", "end");
-            }
-          }
-        });
+        toast.textContent = message;
+        toast.classList.remove('hidden');
         
-        // Set height
-        codeEditorInstance.setSize("100%", "100%");
-        
-        // Add cursor position listener
-        codeEditorInstance.on("cursorActivity", function() {
-          const cursor = codeEditorInstance.getCursor();
-          if (cursorPosition) {
-            cursorPosition.textContent = `Line: ${cursor.line + 1}, Col: ${cursor.ch + 1}`;
-          }
-        });
-        
-        // Add change listener
-        codeEditorInstance.on("change", function() {
-          handleEditorInput();
-        });
-        
-        // Populate language options
-        languages.forEach(lang => {
-          // For language selector
-          const langBtn = document.createElement('div');
-          langBtn.className = 'language-badge';
-          langBtn.style.backgroundColor = lang.color;
-          langBtn.style.color = 'black';
-          langBtn.textContent = lang.name;
-          langBtn.dataset.language = lang.id;
-          languageSelector.appendChild(langBtn);
-          
-          if (languageOptions) {
-            // For new file dropdown
-            const option = document.createElement('div');
-            option.className = 'px-3 py-1 hover:bg-gray-700 cursor-pointer rounded text-sm flex items-center';
-            option.dataset.language = lang.id;
-            
-            const colorDot = document.createElement('div');
-            colorDot.className = 'w-2 h-2 rounded-full mr-2';
-            colorDot.style.backgroundColor = lang.color;
-            
-            option.appendChild(colorDot);
-            option.appendChild(document.createTextNode(lang.name));
-            languageOptions.appendChild(option);
-          }
-        });
-        
-        // Create a default tab
-        createNewTab('javascript');
-        
-        // Set up event listeners
-        setupEventListeners();
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
       }
       
-      function setupEventListeners() {
-        // Button events - with null checks
-        if (newFileBtn) newFileBtn.addEventListener('click', toggleNewFileDropdown);
-        if (openFileBtn) openFileBtn.addEventListener('click', openFile);
-        if (saveFileBtn) saveFileBtn.addEventListener('click', saveFile);
-        if (openFolderBtn) openFolderBtn.addEventListener('click', openFolder);
-        if (renameFileBtn) renameFileBtn.addEventListener('click', () => renameFile(activeTab));
-        if (downloadProjectBtn) downloadProjectBtn.addEventListener('click', downloadProject);
-        if (refreshPreviewBtn) refreshPreviewBtn.addEventListener('click', () => updatePreview(true));
-        if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
-        if (previewToggleBtn) previewToggleBtn.addEventListener('click', togglePreview);
-        if (terminalToggleBtn) terminalToggleBtn.addEventListener('click', toggleTerminal);
-        if (linkCssBtn) linkCssBtn.addEventListener('click', linkCssFile);
-        if (runCodeBtn) runCodeBtn.addEventListener('click', runCode);
-        if (runCodeSidebarBtn) runCodeSidebarBtn.addEventListener('click', runCode);
-        if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
-        
-        // Language selector
-        if (languageSelector) {
-          languageSelector.addEventListener('click', function(e) {
-            const langBtn = e.target.closest('.language-badge');
-            if (langBtn) {
-              const language = langBtn.dataset.language;
-              if (language) {
-                changeLanguage(language);
-              }
-            }
-          });
-        }
-        
-        // New file dropdown
-        if (languageOptions) {
-          languageOptions.addEventListener('click', function(e) {
-            const option = e.target.closest('[data-language]');
-            if (option) {
-              const language = option.dataset.language;
-              if (language) {
-                createNewTab(language);
-                toggleNewFileDropdown();
-              }
-            }
-          });
-        }
-        
-        // Close dropdown when clicking elsewhere
-        document.addEventListener('click', (e) => {
-          if (newFileDropdown && !e.target.closest('#new-file-btn') && !e.target.closest('#new-file-dropdown')) {
-            newFileDropdown.classList.add('hidden');
-          }
-        });
-        
-        // F5 key for running code
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'F5') {
-            e.preventDefault();
-            runCode();
-          }
-          
-          // Ctrl+S for save
-          if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            saveFile();
-          }
-          
-          // Ctrl+N for new file
-          if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            toggleNewFileDropdown();
-          }
-          
-          // Ctrl+O for open file
-          if (e.key === 'o' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            openFile();
-          }
-        });
-      }
-      
-      function toggleNewFileDropdown() {
-        if (newFileDropdown) {
-          newFileDropdown.classList.toggle('hidden');
+      // Get file extension for language
+      function getFileExtensionForLanguage(language) {
+        switch(language) {
+          case 'javascript': return '.js';
+          case 'python': return '.py';
+          case 'rust': return '.rs';
+          case 'go': return '.go';
+          case 'html': return '.html';
+          case 'css': return '.css';
+          default: return '.txt';
         }
       }
       
-      function toggleTheme() {
-        theme = theme === 'dark' ? 'light' : 'dark';
-        const container = document.getElementById('editor-container');
-        
-        if (theme === 'dark') {
-          container.classList.remove('bg-gray-100', 'text-gray-800');
-          container.classList.add('bg-gray-900', 'text-gray-200');
-          if (codeEditorInstance) {
-            codeEditorInstance.setOption('theme', 'dracula');
-          }
-        } else {
-          container.classList.remove('bg-gray-900', 'text-gray-200');
-          container.classList.add('bg-gray-100', 'text-gray-800');
-          if (codeEditorInstance) {
-            codeEditorInstance.setOption('theme', 'default');
-          }
+      // Get template for language
+      function getTemplateForLanguage(language) {
+        switch(language) {
+          case 'html':
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+</html>`;
+          case 'css':
+            return `/* Styles for your document */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+`;
+          case 'javascript':
+            return `// JavaScript code
+console.log('Hello, world!');
+
+function init() {
+  // Your initialization code here
+}
+`;
+          case 'python':
+            return `# Python script
+
+def main():
+    # Print a simple greeting
+    print("Hello, world!")
+    
+    # Some basic Python examples
+    numbers = [1, 2, 3, 4, 5]
+    squared = [n**2 for n in numbers]
+    print(f"Original numbers: {numbers}")
+    print(f"Squared numbers: {squared}")
+    
+    # String operations
+    message = "Python in the browser!"
+    print(f"Message: {message}")
+    print(f"Uppercase: {message.upper()}")
+    print(f"Character count: {len(message)}")
+
+# Call the main function
+main()
+`;
+          case 'rust':
+            return `// Rust program
+
+fn main() {
+    println!("Hello, world!");
+}
+`;
+          case 'go':
+            return `// Go program
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, world!")
+}
+`;
+          default:
+            return '// Start typing your code here...';
         }
       }
       
-      function togglePreview() {
-        showPreview = !showPreview;
-        
-        // Update UI
-        if (previewToggleBtn) {
-          const svg = previewToggleBtn.querySelector('svg');
-          if (svg) {
-            if (showPreview) {
-              svg.classList.add('text-green-400');
-              svg.classList.remove('text-gray-400');
-            } else {
-              svg.classList.remove('text-green-400');
-              svg.classList.add('text-gray-400');
-            }
-          }
-        }
-        
-        // Hide terminal if showing
-        if (showTerminal && terminalPanel) {
-          showTerminal = false;
-          terminalPanel.classList.add('hidden');
-          if (terminalToggleBtn) {
-            const svg = terminalToggleBtn.querySelector('svg');
-            if (svg) {
-              svg.classList.remove('text-green-400');
-              svg.classList.add('text-gray-400');
-            }
-          }
-        }
-        
-        const tab = tabs.find(t => t.id === activeTab);
-        if (!tab) return;
-        
-        // Show/hide preview based on language
-        if (showPreview && (tab.language === 'html' || tab.language === 'css') && previewPanel && editorArea) {
-          previewPanel.classList.remove('hidden');
-          editorArea.classList.remove('w-full');
-          editorArea.classList.add('w-1/2');
-          updatePreview(true);
-        } else if (previewPanel && editorArea) {
-          previewPanel.classList.add('hidden');
-          editorArea.classList.remove('w-1/2');
-          editorArea.classList.add('w-full');
-        }
+      // Get language color
+      function getLanguageColor(language) {
+        return languages.find(l => l.id === language)?.color || '#ffffff';
       }
       
-      function toggleTerminal() {
-        showTerminal = !showTerminal;
-        
-        // Update UI
-        if (terminalToggleBtn) {
-          const svg = terminalToggleBtn.querySelector('svg');
-          if (svg) {
-            if (showTerminal) {
-              svg.classList.add('text-green-400');
-              svg.classList.remove('text-gray-400');
-            } else {
-              svg.classList.remove('text-green-400');
-              svg.classList.add('text-gray-400');
-            }
-          }
-        }
-        
-        // Hide preview if showing
-        if (showPreview && previewPanel) {
-          showPreview = false;
-          previewPanel.classList.add('hidden');
-          if (previewToggleBtn) {
-            const svg = previewToggleBtn.querySelector('svg');
-            if (svg) {
-              svg.classList.remove('text-green-400');
-              svg.classList.add('text-gray-400');
-            }
-          }
-        }
-        
-        // Show/hide terminal
-        if (showTerminal && terminalPanel && editorArea) {
-          terminalPanel.classList.remove('hidden');
-          editorArea.classList.remove('w-full');
-          editorArea.classList.add('w-1/2');
-          
-          // Load Python interpreter if needed
-          loadPythonInterpreter();
-        } else if (terminalPanel && editorArea) {
-          terminalPanel.classList.add('hidden');
-          editorArea.classList.remove('w-1/2');
-          editorArea.classList.add('w-full');
-        }
-      }
-      
-      // Load Python interpreter (Pyodide)
-      async function loadPythonInterpreter() {
-        if (pyodideInstance) return;
-        if (pyodideLoading) return;
-        
-        try {
-          pyodideLoading = true;
-          writeToTerminal("Loading Python interpreter (Pyodide)...");
-          
-          // Load Pyodide
-          if (typeof loadPyodide === 'function') {
-            pyodideInstance = await loadPyodide();
-            writeToTerminal("Python interpreter ready! You can now run Python code.", "success");
-          } else {
-            writeToTerminal("Pyodide not available. Make sure you're connected to the internet.", "error");
-          }
-          
-          pyodideLoading = false;
-        } catch (error) {
-          pyodideLoading = false;
-          writeToTerminal("Failed to load Pyodide: " + error.toString(), "error");
-        }
-      }
-      
-      // Write to terminal
-      function writeToTerminal(text, type = "") {
-        if (!terminal) return;
-        
-        const line = document.createElement('div');
-        line.className = `terminal-line ${type ? 'terminal-' + type : ''}`;
-        line.textContent = text;
-        terminal.appendChild(line);
-        terminal.scrollTop = terminal.scrollHeight;
-      }
-      
-      // Clear terminal
-      function clearTerminal() {
-        if (!terminal) return;
-        
-        terminal.innerHTML = '';
-        writeToTerminal("Terminal cleared.");
-      }
-      
-      // Run code in the active tab
-      async function runCode() {
-        const tab = tabs.find(t => t.id === activeTab);
-        if (!tab) return;
-        
-        // If terminal is not visible, show it
-        if (!showTerminal) {
-          toggleTerminal();
-        }
-        
-        const code = tab.content;
-        const language = tab.language;
-        
-        // Only Python is supported for now
-        if (language !== 'python') {
-          writeToTerminal(`Running ${language} code is not supported yet. Only Python is currently supported.`, "error");
-          return;
-        }
-        
-        // Make sure the Python interpreter is loaded
-        await loadPythonInterpreter();
-        
-        writeToTerminal(`Running ${tab.name}...`, "success");
-        
-        try {
-          runPythonWithPyodide(code);
-        } catch (error) {
-          writeToTerminal(`Error: ${error.message}`, "error");
-        }
-      }
-      
-      // Run Python code with Pyodide
-      function runPythonWithPyodide(code) {
-        if (!pyodideInstance) {
-          writeToTerminal("Python interpreter not loaded yet.", "error");
-          return;
-        }
-        
-        try {
-          // Create a safer version of the code that avoids file I/O issues
-          let safeCode = code;
-          
-          // Set up proper stdout/stderr capture
-          pyodideInstance.runPython(`
-            import sys
-            import io
-            
-            class CustomOutput:
-                def __init__(self, terminal_func):
-                    self.terminal_func = terminal_func
-                    self.buffer = ""
-                
-                def write(self, text):
-                    self.buffer += text
-                    if text.endswith('\\n') or len(self.buffer) > 80:
-                        self.terminal_func(self.buffer)
-                        self.buffer = ""
-                    return len(text)
-                
-                def flush(self):
-                    if self.buffer:
-                        self.terminal_func(self.buffer)
-                        self.buffer = ""
-            
-            sys.stdout = CustomOutput(lambda x: None)
-            sys.stderr = CustomOutput(lambda x: None)
-          `);
-          
-          // Connect Python's stdout to our terminal
-          pyodideInstance.globals.set("js_write_to_terminal", function(text) {
-            writeToTerminal(text);
-          });
-          
-          pyodideInstance.globals.set("js_write_to_terminal_error", function(text) {
-            writeToTerminal(text, "error");
-          });
-          
-          // Update the stdout/stderr functions
-          pyodideInstance.runPython(`
-            sys.stdout.terminal_func = js_write_to_terminal
-            sys.stderr.terminal_func = js_write_to_terminal_error
-          `);
-          
-          // Run the user code with proper error handling
-          pyodideInstance.runPython(`
-try:
-    ${code.split('\n').join('\n    ')}
-except Exception as e:
-    import traceback
-    error_type = type(e).__name__
-    error_msg = str(e)
-    tb = traceback.format_exc()
-    print(f"\\n{error_type}: {error_msg}", file=sys.stderr)
-    if not error_msg.startswith("I/O"):  # Don't show internal I/O errors
-        print(f"\\nTraceback:\\n{tb}", file=sys.stderr)
-          `);
-          
-        } catch (error) {
-          writeToTerminal(`Error in execution: ${error.toString()}`, "error");
-        }
-      }
-      
-      // Handle editor input - now using CodeMirror
+      // Handle editor input
       function handleEditorInput() {
         const tab = tabs.find(t => t.id === activeTab);
         if (!tab) return;
@@ -925,212 +791,6 @@ except Exception as e:
         // Update preview if showing
         if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
           updatePreview();
-        }
-      }
-      
-      // Update preview
-      function updatePreview(forceUpdate = false) {
-        if ((!showPreview && !forceUpdate) || !previewIframe) return;
-        
-        const tab = tabs.find(t => t.id === activeTab);
-        if (!tab) return;
-        
-        const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-        
-        // For HTML files
-        if (tab.language === 'html') {
-          let htmlContent = tab.content;
-          
-          // Look for all CSS link tags in the HTML
-          const linkRegex = /<link[^>]*?href=["']([^"']+\.css)["'][^>]*?>/gi;
-          const styleLinks = [];
-          let match;
-          
-          // Find all CSS link references
-          while ((match = linkRegex.exec(htmlContent)) !== null) {
-            styleLinks.push(match[1]); // The CSS filename
-          }
-          
-          // If we found CSS links, process them
-          if (styleLinks.length > 0) {
-            // For each link, find the corresponding CSS tab
-            for (const cssFileName of styleLinks) {
-              // Find CSS file by name
-              const cssTab = tabs.find(t => 
-                t.language === 'css' && 
-                (t.name === cssFileName || t.displayName === cssFileName)
-              );
-              
-              if (cssTab) {
-                // Replace the link tag with a style tag containing the CSS content
-                const linkTag = new RegExp(`<link[^>]*?href=["']${cssFileName}["'][^>]*?>`, 'gi');
-                htmlContent = htmlContent.replace(linkTag, `<style>/* From: ${cssFileName} */\n${cssTab.content}\n</style>`);
-              }
-            }
-          } else {
-            // If there are no CSS links, check for linked files in memory
-            const linkedCssTabId = linkedFiles[activeTab];
-            const cssTab = linkedCssTabId ? tabs.find(t => t.id === linkedCssTabId) : null;
-            
-            // If there's linked CSS but no link tag, add the styles for preview only
-            if (cssTab && !htmlContent.includes('<style>')) {
-              if (htmlContent.includes('</head>')) {
-                htmlContent = htmlContent.replace('</head>', `<style>/* Preview only */\n${cssTab.content}\n</style></head>`);
-              } else if (htmlContent.includes('<body>')) {
-                htmlContent = htmlContent.replace('<body>', `<style>/* Preview only */\n${cssTab.content}\n</style><body>`);
-              } else {
-                htmlContent = `<style>/* Preview only */\n${cssTab.content}\n</style>${htmlContent}`;
-              }
-            }
-          }
-          
-          iframeDoc.open();
-          iframeDoc.write(htmlContent);
-          iframeDoc.close();
-        } 
-        // For CSS files
-        else if (tab.language === 'css') {
-          // Check if this CSS file is linked to any HTML file
-          let linkedToHtml = false;
-          let htmlTabToPreview = null;
-          
-          // First check explicit links made using the link button
-          for (let [htmlTabId, cssTabId] of Object.entries(linkedFiles)) {
-            if (cssTabId === tab.id) {
-              const htmlTab = tabs.find(t => t.id.toString() === htmlTabId);
-              if (htmlTab && htmlTab.language === 'html') {
-                linkedToHtml = true;
-                htmlTabToPreview = htmlTab;
-                break;
-              }
-            }
-          }
-          
-          // If no explicit link found, check for <link> tags in HTML files
-          if (!linkedToHtml) {
-            const htmlTabs = tabs.filter(t => t.language === 'html');
-            for (const htmlTab of htmlTabs) {
-              const linkRegex = new RegExp(`<link[^>]*?href=["']${tab.name}["'][^>]*?>`, 'gi');
-              if (linkRegex.test(htmlTab.content)) {
-                linkedToHtml = true;
-                htmlTabToPreview = htmlTab;
-                break;
-              }
-            }
-          }
-          
-          // If linked to HTML, show that HTML file with current CSS content
-          if (linkedToHtml && htmlTabToPreview) {
-            let htmlContent = htmlTabToPreview.content;
-            
-            // Replace the link to this CSS with a style tag containing current CSS content
-            const linkRegex = new RegExp(`<link[^>]*?href=["']${tab.name}["'][^>]*?>`, 'gi');
-            if (linkRegex.test(htmlContent)) {
-              htmlContent = htmlContent.replace(linkRegex, `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style>`);
-            } 
-            // If there's no link tag but we know they're linked, insert the CSS
-            else if (!htmlContent.includes(`<style>/* From: ${tab.name}`)) {
-              if (htmlContent.includes('</head>')) {
-                htmlContent = htmlContent.replace('</head>', `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style></head>`);
-              } else if (htmlContent.includes('<body>')) {
-                htmlContent = htmlContent.replace('<body>', `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style><body>`);
-              } else {
-                htmlContent = `<style>/* From: ${tab.name} (live preview) */\n${tab.content}\n</style>${htmlContent}`;
-              }
-            }
-            
-            iframeDoc.open();
-            iframeDoc.write(htmlContent);
-            iframeDoc.close();
-          }
-          // If not linked to any HTML, show the generic CSS preview
-          else {
-            iframeDoc.open();
-            
-            // Write HTML parts separately
-            iframeDoc.write('<!DOCTYPE html><html><head>');
-            iframeDoc.write('<style>' + tab.content + '</style>');
-            iframeDoc.write('</head><body>');
-            iframeDoc.write('<div style="padding: 20px;">');
-            iframeDoc.write('<h1>CSS Preview</h1>');
-            iframeDoc.write('<p>This is a paragraph with <a href="#">a link</a>.</p>');
-            iframeDoc.write('<div class="container">');
-            iframeDoc.write('<h2>Sample Container</h2>');
-            iframeDoc.write('<button>Button</button>');
-            iframeDoc.write('<ul>');
-            iframeDoc.write('<li>List item 1</li>');
-            iframeDoc.write('<li>List item 2</li>');
-            iframeDoc.write('<li>List item 3</li>');
-            iframeDoc.write('</ul>');
-            iframeDoc.write('<div class="box">Box with class "box"</div>');
-            iframeDoc.write('</div>');
-            iframeDoc.write('<footer>Footer content</footer>');
-            iframeDoc.write('</div>');
-            iframeDoc.write('</body></html>');
-            
-            iframeDoc.close();
-          }
-        }
-      }
-      
-      // Create a new tab
-      function createNewTab(language) {
-        const id = Date.now();
-        const extension = getFileExtensionForLanguage(language);
-        const content = getTemplateForLanguage(language);
-        
-        const tab = {
-          id: id,
-          name: `untitled${extension}`,
-          displayName: `untitled${extension}`,
-          language: language,
-          content: content,
-          isUnsaved: true,
-          fileHandle: null
-        };
-        
-        tabs.push(tab);
-        renderTabs();
-        setActiveTab(id);
-        showToast(`Created new ${languages.find(l => l.id === language).name} file`);
-      }
-      
-      // Set active tab
-      function setActiveTab(id) {
-        const tab = tabs.find(t => t.id === id);
-        if (!tab) return;
-        
-        activeTab = id;
-        
-        // Update CodeMirror with the content and language mode
-        if (codeEditorInstance) {
-          codeEditorInstance.setValue(tab.content);
-          
-          // Set appropriate language mode
-          const langInfo = languages.find(l => l.id === tab.language);
-          if (langInfo) {
-            codeEditorInstance.setOption('mode', langInfo.mime);
-          }
-        }
-        
-        updateLanguageUI(tab.language);
-        renderTabs();
-        
-        // Show/hide CSS link button
-        if (tab.language === 'html' && linkCssContainer) {
-          linkCssContainer.classList.remove('hidden');
-          updateLinkedCssInfo();
-        } else if (linkCssContainer) {
-          linkCssContainer.classList.add('hidden');
-        }
-        
-        // Update preview if needed
-        if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
-          updatePreview(true);
-        } else if (showPreview && previewPanel && editorArea) {
-          previewPanel.classList.add('hidden');
-          editorArea.classList.remove('w-1/2');
-          editorArea.classList.add('w-full');
         }
       }
       
@@ -1215,32 +875,43 @@ except Exception as e:
         }
       }
       
-      // Close tab
-      function closeTab(id) {
+      // Set active tab
+      function setActiveTab(id) {
         const tab = tabs.find(t => t.id === id);
         if (!tab) return;
         
-        // Confirm if unsaved
-        if (tab.isUnsaved) {
-          if (!confirm(`${tab.name} has unsaved changes. Close anyway?`)) {
-            return;
+        activeTab = id;
+        
+        // Update CodeMirror with the content and language mode
+        if (codeEditorInstance) {
+          codeEditorInstance.setValue(tab.content);
+          
+          // Set appropriate language mode
+          const langInfo = languages.find(l => l.id === tab.language);
+          if (langInfo) {
+            codeEditorInstance.setOption('mode', langInfo.mime);
           }
         }
         
-        // Remove tab
-        tabs = tabs.filter(t => t.id !== id);
+        updateLanguageUI(tab.language);
+        renderTabs();
         
-        // If closing active tab, switch to another
-        if (id === activeTab && tabs.length > 0) {
-          const index = tabs.findIndex(t => t.id === id);
-          const newTab = tabs[index === 0 ? 0 : index - 1];
-          setActiveTab(newTab.id);
-        } else if (tabs.length === 0) {
-          // If no tabs left, create a new one
-          createNewTab('javascript');
+        // Show/hide CSS link button
+        if (tab.language === 'html' && linkCssContainer) {
+          linkCssContainer.classList.remove('hidden');
+          updateLinkedCssInfo();
+        } else if (linkCssContainer) {
+          linkCssContainer.classList.add('hidden');
         }
         
-        renderTabs();
+        // Update preview if needed
+        if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
+          updatePreview(true);
+        } else if (showPreview && previewPanel && editorArea) {
+          previewPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+        }
       }
       
       // Update language UI
@@ -1267,37 +938,402 @@ except Exception as e:
         languageIndicator.textContent = languages.find(l => l.id === language)?.name || 'Unknown';
       }
       
-      // Change language
+      // Create a new tab
+      function createNewTab(language) {
+        const id = Date.now();
+        const extension = getFileExtensionForLanguage(language);
+        const content = getTemplateForLanguage(language);
+        
+        const tab = {
+          id: id,
+          name: `untitled${extension}`,
+          displayName: `untitled${extension}`,
+          language: language,
+          content: content,
+          isUnsaved: true,
+          fileHandle: null
+        };
+        
+        tabs.push(tab);
+        renderTabs();
+        setActiveTab(id);
+        showToast(`Created new ${languages.find(l => l.id === language).name} file`);
+      }
+      
+      // Initialize the editor
+      initEditor();
+      
+      function initEditor() {
+        if (!languageSelector) {
+          console.error("Language selector not found");
+          return;
+        }
+        
+        // Initialize CodeMirror
+        codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
+          lineNumbers: true,
+          theme: 'dracula',
+          mode: 'javascript',
+          indentUnit: 2,
+          tabSize: 2,
+          lineWrapping: false,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          styleActiveLine: true,
+          extraKeys: {
+            "Tab": function(cm) {
+              cm.replaceSelection("  ", "end");
+            }
+          }
+        });
+        
+        // Set height
+        codeEditorInstance.setSize("100%", "100%");
+        
+        // Add cursor position listener
+        codeEditorInstance.on("cursorActivity", function() {
+          const cursor = codeEditorInstance.getCursor();
+          if (cursorPosition) {
+            cursorPosition.textContent = `Line: ${cursor.line + 1}, Col: ${cursor.ch + 1}`;
+          }
+        });
+        
+        // Add change listener
+        codeEditorInstance.on("change", function() {
+          handleEditorInput();
+        });
+        
+        // Populate language options
+        languages.forEach(lang => {
+          // For language selector
+          const langBtn = document.createElement('div');
+          langBtn.className = 'language-badge';
+          langBtn.style.backgroundColor = lang.color;
+          langBtn.style.color = 'black';
+          langBtn.textContent = lang.name;
+          langBtn.dataset.language = lang.id;
+          languageSelector.appendChild(langBtn);
+          
+          if (languageOptions) {
+            // For new file dropdown
+            const option = document.createElement('div');
+            option.className = 'px-3 py-1 hover:bg-gray-700 cursor-pointer rounded text-sm flex items-center';
+            option.dataset.language = lang.id;
+            
+            const colorDot = document.createElement('div');
+            colorDot.className = 'w-2 h-2 rounded-full mr-2';
+            colorDot.style.backgroundColor = lang.color;
+            
+            option.appendChild(colorDot);
+            option.appendChild(document.createTextNode(lang.name));
+            languageOptions.appendChild(option);
+          }
+        });
+        
+        // Load user settings before creating tabs
+        loadSettings();
+        
+        // Create a default tab
+        createNewTab('javascript');
+        
+        // Set up event listeners
+        setupEventListeners();
+      }
+      
+      // Toggle new file dropdown menu
+      function toggleNewFileDropdown() {
+        if (!newFileDropdown) return;
+        
+        if (newFileDropdown.classList.contains('hidden')) {
+          newFileDropdown.classList.remove('hidden');
+        } else {
+          newFileDropdown.classList.add('hidden');
+        }
+      }
+      
+      function setupEventListeners() {
+        // Button events - with null checks
+        if (newFileBtn) newFileBtn.addEventListener('click', toggleNewFileDropdown);
+        if (openFileBtn) openFileBtn.addEventListener('click', openFile);
+        if (saveFileBtn) saveFileBtn.addEventListener('click', saveFile);
+        if (openFolderBtn) openFolderBtn.addEventListener('click', openFolder);
+        if (renameFileBtn) renameFileBtn.addEventListener('click', () => renameFile(activeTab));
+        if (downloadProjectBtn) downloadProjectBtn.addEventListener('click', downloadProject);
+        if (refreshPreviewBtn) refreshPreviewBtn.addEventListener('click', () => updatePreview(true));
+        if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+        if (previewToggleBtn) previewToggleBtn.addEventListener('click', togglePreview);
+        if (terminalToggleBtn) terminalToggleBtn.addEventListener('click', toggleTerminal);
+        if (linkCssBtn) linkCssBtn.addEventListener('click', linkCssFile);
+        if (runCodeBtn) runCodeBtn.addEventListener('click', runCode);
+        if (runCodeSidebarBtn) runCodeSidebarBtn.addEventListener('click', runCode);
+        if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
+        
+        // Settings related event listeners
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const settingsTabBtns = document.querySelectorAll('.settings-tab-btn');
+        const resetColorsBtn = document.getElementById('reset-colors-btn');
+        
+        // Open settings modal
+        if (settingsBtn) {
+          settingsBtn.addEventListener('click', function() {
+            if (settingsModal) {
+              settingsModal.classList.remove('hidden');
+              loadSettingsToForm();
+            }
+          });
+        }
+        
+        // Close settings modal
+        if (closeSettingsBtn) {
+          closeSettingsBtn.addEventListener('click', function() {
+            if (settingsModal) settingsModal.classList.add('hidden');
+          });
+        }
+        
+        // Close settings when clicking backdrop
+        if (settingsModal) {
+          const settingsBackdrop = document.getElementById('settings-backdrop');
+          if (settingsBackdrop) {
+            settingsBackdrop.addEventListener('click', function() {
+              settingsModal.classList.add('hidden');
+            });
+          }
+        }
+        
+        // Settings tabs navigation
+        if (settingsTabBtns) {
+          settingsTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+              const tabName = btn.dataset.tab;
+              
+              // Update active tab button
+              settingsTabBtns.forEach(b => {
+                b.classList.remove('text-blue-400', 'border-b-2', 'border-blue-400');
+                b.classList.add('text-gray-400');
+              });
+              btn.classList.remove('text-gray-400');
+              btn.classList.add('text-blue-400', 'border-b-2', 'border-blue-400');
+              
+              // Show selected tab content
+              document.querySelectorAll('.settings-tab-content').forEach(content => {
+                content.classList.add('hidden');
+              });
+              document.getElementById(`${tabName}-settings`).classList.remove('hidden');
+            });
+          });
+        }
+        
+        // Theme options
+        document.querySelectorAll('.theme-option').forEach(btn => {
+          btn.addEventListener('click', function() {
+            document.querySelectorAll('.theme-option').forEach(b => {
+              b.classList.remove('ring-2', 'ring-blue-500');
+            });
+            btn.classList.add('ring-2', 'ring-blue-500');
+          });
+        });
+        
+        // Font size slider
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeValue = document.getElementById('font-size-value');
+        if (fontSizeSlider && fontSizeValue) {
+          fontSizeSlider.addEventListener('input', function() {
+            fontSizeValue.textContent = `${fontSizeSlider.value}px`;
+          });
+        }
+        
+        // Tab size buttons
+        document.querySelectorAll('.tab-size-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-size-btn').forEach(b => {
+              b.classList.remove('bg-blue-600');
+            });
+            btn.classList.add('bg-blue-600');
+          });
+        });
+        
+        // Reset colors button
+        if (resetColorsBtn) {
+          resetColorsBtn.addEventListener('click', function() {
+            const defaultColors = {
+              keyword: '#ff9d00',
+              string: '#7ec699',
+              variable: '#e06c75',
+              number: '#7fcef5',
+              comment: '#676e95',
+              def: '#c792ea'
+            };
+            
+            document.querySelectorAll('.syntax-color-picker').forEach(picker => {
+              const element = picker.dataset.element;
+              if (defaultColors[element]) {
+                picker.value = defaultColors[element];
+              }
+            });
+          });
+        }
+        
+        // Save settings button
+        if (saveSettingsBtn) {
+          saveSettingsBtn.addEventListener('click', function() {
+            saveSettingsFromForm();
+            applySettings();
+            if (settingsModal) settingsModal.classList.add('hidden');
+            showToast('Settings saved successfully');
+          });
+        }
+        
+        // Language selector
+        if (languageSelector) {
+          languageSelector.addEventListener('click', function(e) {
+            const langBtn = e.target.closest('.language-badge');
+            if (langBtn) {
+              const language = langBtn.dataset.language;
+              if (language) {
+                changeLanguage(language);
+              }
+            }
+          });
+        }
+        
+        // New file dropdown
+        if (languageOptions) {
+          languageOptions.addEventListener('click', function(e) {
+            const option = e.target.closest('[data-language]');
+            if (option) {
+              const language = option.dataset.language;
+              if (language) {
+                createNewTab(language);
+                toggleNewFileDropdown();
+              }
+            }
+          });
+        }
+        
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+          if (newFileDropdown && !e.target.closest('#new-file-btn') && !e.target.closest('#new-file-dropdown')) {
+            newFileDropdown.classList.add('hidden');
+          }
+        });
+        
+        // F5 key for running code
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'F5') {
+            e.preventDefault();
+            runCode();
+          }
+          
+          // Ctrl+S for save
+          if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            saveFile();
+          }
+          
+          // Ctrl+N for new file
+          if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            toggleNewFileDropdown();
+          }
+          
+          // Ctrl+O for open file
+          if (e.key === 'o' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            openFile();
+          }
+        });
+      }
+      
+      // Toggle preview panel
+      function togglePreview() {
+        if (!previewPanel || !editorArea) return;
+        
+        showPreview = !showPreview;
+        
+        if (showPreview) {
+          previewPanel.classList.remove('hidden');
+          editorArea.classList.remove('w-full');
+          editorArea.classList.add('w-1/2');
+          updatePreview(true);
+        } else {
+          previewPanel.classList.add('hidden');
+          editorArea.classList.remove('w-1/2');
+          editorArea.classList.add('w-full');
+        }
+      }
+      
+      // Toggle terminal panel
+      function toggleTerminal() {
+        if (!terminalPanel || !editorArea) return;
+        
+        showTerminal = !showTerminal;
+        
+        if (showTerminal) {
+          terminalPanel.classList.remove('hidden');
+          if (showPreview) {
+            // Both panels are visible, adjust sizes
+            editorArea.classList.remove('w-1/2', 'w-full');
+            editorArea.classList.add('w-1/3');
+            previewPanel.classList.remove('w-1/2');
+            previewPanel.classList.add('w-1/3');
+            terminalPanel.classList.remove('w-1/2');
+            terminalPanel.classList.add('w-1/3');
+          } else {
+            editorArea.classList.remove('w-full');
+            editorArea.classList.add('w-1/2');
+            terminalPanel.classList.remove('w-1/2');
+            terminalPanel.classList.add('w-1/2');
+          }
+        } else {
+          terminalPanel.classList.add('hidden');
+          if (showPreview) {
+            // Only preview is visible
+            editorArea.classList.remove('w-1/3', 'w-full');
+            editorArea.classList.add('w-1/2');
+            previewPanel.classList.remove('w-1/3');
+            previewPanel.classList.add('w-1/2');
+          } else {
+            // No panels visible
+            editorArea.classList.remove('w-1/2', 'w-1/3');
+            editorArea.classList.add('w-full');
+          }
+        }
+      }
+      
+      // Change language of current file
       function changeLanguage(language) {
         const tab = tabs.find(t => t.id === activeTab);
         if (!tab) return;
         
-        // Get current file info
-        let updatedContent = tab.content;
-        let updatedName = tab.name;
+        const oldExtension = tab.name.substring(tab.name.lastIndexOf('.'));
+        const newExtension = getFileExtensionForLanguage(language);
         
-        // Update extension if untitled
-        if (updatedName.startsWith('untitled.') || !updatedContent.trim()) {
-          updatedName = 'untitled' + getFileExtensionForLanguage(language);
+        // If the file has a name (is not untitled), replace extension
+        if (tab.name.lastIndexOf('.') !== -1) {
+          tab.name = tab.name.substring(0, tab.name.lastIndexOf('.')) + newExtension;
+          tab.displayName = tab.name;
         }
         
-        // Apply template if empty
+        // Check if content is empty or just a basic comment before changing language
+        const currentContent = tab.content;
+        let updatedContent = currentContent;
+        
         const isBasicComment = 
-          updatedContent.trim() === '// Start typing your code here...' ||
-          updatedContent.trim() === '# Start typing your code here...';
+          currentContent.trim() === '// Start typing your code here...' ||
+          currentContent.trim() === '# Start typing your code here...';
           
-        if (!updatedContent.trim() || isBasicComment) {
+        if (!currentContent.trim() || isBasicComment) {
           updatedContent = getTemplateForLanguage(language);
         }
         
-        // Update tab
         tab.language = language;
-        tab.name = updatedName;
-        tab.displayName = updatedName;
         tab.content = updatedContent;
         tab.isUnsaved = true;
         
-        // Update UI including CodeMirror
+        // Update CodeMirror with potentially new content
         if (codeEditorInstance) {
           codeEditorInstance.setValue(updatedContent);
           
@@ -1312,613 +1348,835 @@ except Exception as e:
         renderTabs();
         
         // Show/hide CSS link button
-        if (language === 'html' && linkCssContainer) {
+        if (tab.language === 'html' && linkCssContainer) {
           linkCssContainer.classList.remove('hidden');
           updateLinkedCssInfo();
         } else if (linkCssContainer) {
           linkCssContainer.classList.add('hidden');
         }
+      }
+      
+      // Write to terminal
+      function writeToTerminal(text, className = '') {
+        if (!terminal) return;
         
-        // Update preview if needed
-        if (showPreview && (language === 'html' || language === 'css')) {
-          updatePreview(true);
-        } else if (showPreview && previewPanel && editorArea) {
-          previewPanel.classList.add('hidden');
-          editorArea.classList.remove('w-1/2');
-          editorArea.classList.add('w-full');
+        const line = document.createElement('div');
+        line.className = `terminal-line ${className}`;
+        line.textContent = text;
+        terminal.appendChild(line);
+        
+        // Auto-scroll to bottom
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+      
+      // Clear terminal
+      function clearTerminal() {
+        if (!terminal) return;
+        
+        terminal.innerHTML = '';
+        writeToTerminal('Terminal cleared');
+      }
+      
+      // Run code
+      async function runCode() {
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // Show terminal if not visible
+        if (!showTerminal && terminalPanel) {
+          toggleTerminal();
+        }
+        
+        // Clear terminal before running
+        clearTerminal();
+        
+        writeToTerminal(`Running ${tab.name}...`, 'terminal-success');
+        
+        if (tab.language === 'javascript') {
+          try {
+            // Create a sandbox function to run the code
+            const code = tab.content;
+            const consoleMethods = {
+              log: (...args) => writeToTerminal(args.join(' ')),
+              warn: (...args) => writeToTerminal(args.join(' '), 'terminal-warning'),
+              error: (...args) => writeToTerminal(args.join(' '), 'terminal-error'),
+              info: (...args) => writeToTerminal(args.join(' '))
+            };
+            
+            // Create a function that will run with a modified console
+            const runWithCustomConsole = new Function('console', code);
+            
+            // Execute the code with the custom console
+            runWithCustomConsole(consoleMethods);
+            
+            writeToTerminal('Code executed successfully', 'terminal-success');
+          } catch (error) {
+            writeToTerminal(`Error: ${error.message}`, 'terminal-error');
+          }
+        } else if (tab.language === 'python') {
+          // Run Python code using Pyodide
+          await runPythonCode(tab.content);
+        } else {
+          writeToTerminal(`Language '${tab.language}' execution is not supported in the browser.`, 'terminal-warning');
+        }
+      }
+      
+      // Run Python code using Pyodide
+      async function runPythonCode(code) {
+        // Show loading in terminal
+        writeToTerminal('Initializing Python environment...', 'terminal-warning');
+        
+        try {
+          // Load Pyodide if not already loaded
+          if (!pyodideInstance) {
+            if (pyodideLoading) {
+              writeToTerminal('Python environment is still loading, please wait...', 'terminal-warning');
+              return;
+            }
+            
+            pyodideLoading = true;
+            writeToTerminal('Loading Python (this may take a moment on first run)...', 'terminal-warning');
+            
+            try {
+              pyodideInstance = await loadPyodide();
+              writeToTerminal('Python environment loaded successfully!', 'terminal-success');
+              
+              // Add custom print function that writes to terminal
+              await pyodideInstance.runPythonAsync(`
+                import sys
+                from js import writeToTerminalFromPython
+                
+                class CustomStdout:
+                    def write(self, text):
+                        writeToTerminalFromPython(text)
+                    def flush(self):
+                        pass
+                
+                sys.stdout = CustomStdout()
+                sys.stderr = CustomStdout()
+              `);
+              
+            } catch (err) {
+              writeToTerminal(`Failed to load Python: ${err.message}`, 'terminal-error');
+              pyodideLoading = false;
+              return;
+            }
+            
+            pyodideLoading = false;
+          }
           
-          // Toggle preview off
-          showPreview = false;
-          if (previewToggleBtn) {
-            const svg = previewToggleBtn.querySelector('svg');
-            if (svg) {
-              svg.classList.remove('text-green-400');
-              svg.classList.add('text-gray-400');
+          // Execute Python code
+          writeToTerminal('Running Python code...', 'terminal-success');
+          await pyodideInstance.runPythonAsync(code);
+          writeToTerminal('Python execution completed', 'terminal-success');
+          
+        } catch (err) {
+          writeToTerminal(`Python Error: ${err.message}`, 'terminal-error');
+        }
+      }
+      
+      // Update preview
+      function updatePreview(force = false) {
+        if (!showPreview && !force) return;
+        if (!previewPanel || !previewIframe) return;
+        
+        const tab = tabs.find(t => t.id === activeTab);
+        if (!tab) return;
+        
+        // If it's an HTML file, show it directly
+        if (tab.language === 'html') {
+          const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+          let content = tab.content;
+          
+          // Check for linked CSS files and inject them
+          for (const tabId in linkedFiles) {
+            if (linkedFiles[tabId] === tab.id) {
+              const cssTab = tabs.find(t => t.id === parseInt(tabId));
+              if (cssTab && cssTab.language === 'css') {
+                // Inject the CSS content into the HTML
+                content = content.replace('</head>', `<style>${cssTab.content}</style></head>`);
+              }
+            }
+          }
+          
+          doc.open();
+          doc.write(content);
+          doc.close();
+        } else if (tab.language === 'css') {
+          // For CSS files, find any HTML files that link to this CSS and update them
+          for (const htmlTabId in linkedFiles) {
+            if (linkedFiles[htmlTabId] === tab.id) {
+              const htmlTab = tabs.find(t => t.id === parseInt(htmlTabId));
+              if (htmlTab && htmlTab.language === 'html') {
+                const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+                let content = htmlTab.content;
+                
+                // Inject the CSS content into the HTML
+                content = content.replace('</head>', `<style>${tab.content}</style></head>`);
+                
+                doc.open();
+                doc.write(content);
+                doc.close();
+                break;
+              }
             }
           }
         }
-      }
-      
-      // Link CSS file
-      function linkCssFile() {
-        // Get all CSS tabs
-        const cssTabs = tabs.filter(t => t.language === 'css');
-        
-        if (cssTabs.length === 0) {
-          showToast("Create a CSS file first to link it");
-          return;
-        }
-        
-        const tab = tabs.find(t => t.id === activeTab);
-        if (!tab || tab.language !== 'html') return;
-        
-        // If only one CSS file, use it automatically
-        if (cssTabs.length === 1) {
-          const cssTab = cssTabs[0];
-          addCssLinkToHtml(tab, cssTab);
-          linkedFiles[activeTab] = cssTab.id;
-          updateLinkedCssInfo();
-          updatePreview(true);
-          showToast(`Linked ${cssTab.name} to current file`);
-          return;
-        }
-        
-        // Otherwise show dialog to choose
-        const cssTabId = prompt(
-          "Enter the number of the CSS file to link:\n" + 
-          cssTabs.map((tab, i) => `${i+1}. ${tab.name}`).join('\n')
-        );
-        
-        if (cssTabId && !isNaN(cssTabId) && parseInt(cssTabId) > 0 && parseInt(cssTabId) <= cssTabs.length) {
-          const selectedTab = cssTabs[parseInt(cssTabId) - 1];
-          addCssLinkToHtml(tab, selectedTab);
-          linkedFiles[activeTab] = selectedTab.id;
-          updateLinkedCssInfo();
-          updatePreview(true);
-          showToast(`Linked ${selectedTab.name} to current file`);
-        }
-      }
-      
-      // Add CSS link to HTML file
-      function addCssLinkToHtml(htmlTab, cssTab) {
-        const htmlContent = htmlTab.content;
-        let updatedContent = htmlContent;
-        const cssFileName = cssTab.displayName || cssTab.name;
-        const linkMode = confirm("Do you want to:\n\nOK: Add a <link> tag (recommended for separate files)\nCancel: Embed CSS with a <style> tag (for single file export)");
-        
-        // Remove any existing link to this CSS file
-        const linkRegex = new RegExp(`<link[^>]*?href=["']${cssFileName}["'][^>]*?>`, 'gi');
-        updatedContent = updatedContent.replace(linkRegex, '');
-        
-        // Find </head> tag
-        if (updatedContent.includes('</head>')) {
-          if (linkMode) {
-            // Add <link> tag
-            updatedContent = updatedContent.replace('</head>', `  <link rel="stylesheet" href="${cssFileName}">\n</head>`);
-          } else {
-            // Add <style> tag with embedded CSS
-            updatedContent = updatedContent.replace('</head>', `  <style>\n${cssTab.content}\n  </style>\n</head>`);
-          }
-        } 
-        // If no </head> tag, try to insert before <body>
-        else if (updatedContent.includes('<body>')) {
-          if (linkMode) {
-            updatedContent = updatedContent.replace('<body>', `<head>\n  <link rel="stylesheet" href="${cssFileName}">\n</head>\n<body>`);
-          } else {
-            updatedContent = updatedContent.replace('<body>', `<head>\n  <style>\n${cssTab.content}\n  </style>\n</head>\n<body>`);
-          }
-        }
-        // Last resort: add at the beginning
-        else {
-          if (linkMode) {
-            updatedContent = `<head>\n  <link rel="stylesheet" href="${cssFileName}">\n</head>\n${updatedContent}`;
-          } else {
-            updatedContent = `<head>\n  <style>\n${cssTab.content}\n  </style>\n</head>\n${updatedContent}`;
-          }
-        }
-        
-        // Update HTML content
-        htmlTab.content = updatedContent;
-        htmlTab.isUnsaved = true;
-        
-        // Update CodeMirror
-        if (htmlTab.id === activeTab && codeEditorInstance) {
-          codeEditorInstance.setValue(updatedContent);
-        }
-        
-        renderTabs();
       }
       
       // Update linked CSS info
       function updateLinkedCssInfo() {
-        if (!linkedCssInfo) return;
+        if (!linkCssContainer || !linkedCssInfo || !linkCssBtn) return;
         
-        const linkedCssTabId = linkedFiles[activeTab];
-        if (linkedCssTabId) {
-          const cssTab = tabs.find(t => t.id === linkedCssTabId);
-          if (cssTab) {
-            linkedCssInfo.textContent = `Linked: ${cssTab.name}`;
-            linkedCssInfo.classList.remove('hidden');
-            if (linkCssBtn) linkCssBtn.textContent = 'Change Linked CSS';
-          } else {
-            // Linked file no longer exists
-            delete linkedFiles[activeTab];
-            linkedCssInfo.classList.add('hidden');
-            if (linkCssBtn) linkCssBtn.textContent = 'Link CSS File';
+        const currentTab = tabs.find(t => t.id === activeTab);
+        if (!currentTab || currentTab.language !== 'html') return;
+        
+        // Check if this HTML file has a linked CSS file
+        let isLinked = false;
+        let linkedCssName = '';
+        
+        for (const cssTabId in linkedFiles) {
+          if (linkedFiles[cssTabId] === currentTab.id) {
+            isLinked = true;
+            const cssTab = tabs.find(t => t.id === parseInt(cssTabId));
+            if (cssTab) {
+              linkedCssName = cssTab.name;
+            }
+            break;
           }
+        }
+        
+        if (isLinked) {
+          linkedCssInfo.textContent = `Linked to: ${linkedCssName}`;
+          linkedCssInfo.classList.remove('hidden');
+          linkCssBtn.textContent = 'Unlink CSS';
         } else {
           linkedCssInfo.classList.add('hidden');
-          if (linkCssBtn) linkCssBtn.textContent = 'Link CSS File';
+          linkCssBtn.textContent = 'Link CSS';
         }
       }
       
-      // Update HTML links when CSS file is renamed
-      function updateHtmlLinksAfterCssRename(oldCssName, newCssName) {
-        // Find all HTML tabs
-        const htmlTabs = tabs.filter(t => t.language === 'html');
+      // Link/unlink CSS file
+      function linkCssFile() {
+        const htmlTab = tabs.find(t => t.id === activeTab);
+        if (!htmlTab || htmlTab.language !== 'html') return;
         
-        // For each HTML tab, check if it links to the renamed CSS file
-        htmlTabs.forEach(htmlTab => {
-          const htmlContent = htmlTab.content;
-          
-          // Look for link tags with the old CSS filename
-          const linkRegex = new RegExp(`<link[^>]*?href=["']${oldCssName}["'][^>]*?>`, 'gi');
-          
-          if (linkRegex.test(htmlContent)) {
-            // Replace the old CSS filename with the new one
-            const updatedContent = htmlContent.replace(
-              new RegExp(`href=["']${oldCssName}["']`, 'gi'), 
-              `href="${newCssName}"`
-            );
-            
-            // Update the HTML tab content
-            htmlTab.content = updatedContent;
-            htmlTab.isUnsaved = true;
-            
-            // Update CodeMirror
-            if (htmlTab.id === activeTab && codeEditorInstance) {
-              codeEditorInstance.setValue(updatedContent);
-            }
-            
-            showToast(`Updated link in ${htmlTab.name} to reference ${newCssName}`);
-          }
-        });
+        // Check if already linked
+        let isLinked = false;
+        let linkedCssTabId = null;
         
-        // Refresh tabs to show unsaved indicators
-        renderTabs();
-      }
-      
-      // Rename file
-      function renameFile(id) {
-        const tab = tabs.find(t => t.id === id);
-        if (!tab) return;
-        
-        // Get current name and extension
-        const currentName = tab.displayName || tab.name;
-        const currentExtension = '.' + currentName.split('.').pop();
-        const currentBaseName = currentName.substring(0, currentName.length - currentExtension.length);
-        
-        // Prompt for new name
-        const newName = prompt(`Rename file: ${currentName}`, currentBaseName);
-        
-        if (!newName || newName.trim() === '') return;
-        
-        // Make sure name has extension
-        let finalName = newName;
-        if (!finalName.includes('.')) {
-          finalName += currentExtension;
-        }
-        
-        // Determine language from extension
-        const newExtension = '.' + finalName.split('.').pop().toLowerCase();
-        const newLanguage = languages.find(lang => 
-          lang.extensions.includes(newExtension)
-        )?.id || tab.language;
-        
-        // Special handling: If renaming a CSS file, update any HTML files that link to it
-        if (tab.language === 'css') {
-          updateHtmlLinksAfterCssRename(currentName, finalName);
-        }
-        
-        // Update tab
-        tab.name = finalName;
-        tab.displayName = finalName;
-        tab.language = newLanguage;
-        tab.isUnsaved = true;
-        
-        renderTabs();
-        
-        // If renaming active tab, update UI
-        if (id === activeTab) {
-          updateLanguageUI(newLanguage);
-          
-          // Update CodeMirror mode if language changed
-          if (newLanguage !== tab.language && codeEditorInstance) {
-            const langInfo = languages.find(l => l.id === newLanguage);
-            if (langInfo) {
-              codeEditorInstance.setOption('mode', langInfo.mime);
-            }
+        for (const cssTabId in linkedFiles) {
+          if (linkedFiles[cssTabId] === htmlTab.id) {
+            isLinked = true;
+            linkedCssTabId = parseInt(cssTabId);
+            break;
           }
         }
         
-        showToast(`Renamed to ${finalName}`);
+        if (isLinked && linkedCssTabId) {
+          // Unlink the CSS file
+          delete linkedFiles[linkedCssTabId];
+          updateLinkedCssInfo();
+          showToast('CSS file unlinked');
+        } else {
+          // Show available CSS files to link
+          const cssFiles = tabs.filter(t => t.language === 'css');
+          
+          if (cssFiles.length === 0) {
+            showToast('No CSS files available. Create a CSS file first.');
+            return;
+          }
+          
+          // If only one CSS file, link it directly
+          if (cssFiles.length === 1) {
+            linkedFiles[cssFiles[0].id] = htmlTab.id;
+            updateLinkedCssInfo();
+            showToast(`Linked to ${cssFiles[0].name}`);
+            updatePreview(true);
+            return;
+          }
+          
+          // If multiple CSS files, prompt user to choose
+          const cssFile = prompt('Enter the name of the CSS file to link:', cssFiles[0].name);
+          if (!cssFile) return;
+          
+          const selectedCss = cssFiles.find(t => t.name === cssFile);
+          if (selectedCss) {
+            linkedFiles[selectedCss.id] = htmlTab.id;
+            updateLinkedCssInfo();
+            showToast(`Linked to ${selectedCss.name}`);
+            updatePreview(true);
+          } else {
+            showToast(`CSS file '${cssFile}' not found`);
+          }
+        }
       }
       
-      // Functions for file operations - placeholder implementations
+      // Open file (local file system API)
       async function openFile() {
         try {
-          // Create a file input element
-          const fileInput = document.createElement('input');
-          fileInput.type = 'file';
-          fileInput.multiple = true; // Allow multiple file selection
-          fileInput.accept = '.html,.htm,.css,.js,.py,.rs,.go'; // Accept web development files
+          // Check if File System API is supported
+          if (!('showOpenFilePicker' in window)) {
+            showToast('File system access is not supported in this browser');
+            return;
+          }
           
-          // Handle file selection
-          fileInput.onchange = async (e) => {
-            const files = e.target.files;
-            
-            if (!files || files.length === 0) {
-              return;
-            }
-            
-            // Track how many files were successfully opened
-            let openedCount = 0;
-            
-            // Process each selected file
-            for (let i = 0; i < files.length; i++) {
-              const file = files[i];
-              const fileName = file.name;
-              const fileExtension = '.' + fileName.split('.').pop().toLowerCase();
-              
-              // Find appropriate language based on file extension
-              const language = languages.find(lang => 
-                lang.extensions.includes(fileExtension)
-              )?.id;
-              
-              // Skip files with unsupported extensions
-              if (!language) {
-                continue;
-              }
-              
-              try {
-                // Read file content
-                const content = await readFileContent(file);
-                
-                // Create a new tab for this file
-                const id = Date.now() + i; // Ensure unique ID
-                const tab = {
-                  id: id,
-                  name: fileName,
-                  displayName: fileName,
-                  language: language,
-                  content: content,
-                  isUnsaved: false,
-                  fileHandle: null
-                };
-                
-                // Add path info if available (from directory structure)
-                if (file.webkitRelativePath) {
-                  const pathParts = file.webkitRelativePath.split('/');
-                  if (pathParts.length > 1) {
-                    pathParts.pop(); // Remove filename
-                    tab.path = pathParts.join('/');
-                  }
+          const options = {
+            types: [
+              {
+                description: 'Text Files',
+                accept: {
+                  'text/*': ['.js', '.py', '.html', '.css', '.txt', '.json', '.rs', '.go']
                 }
-                
-                tabs.push(tab);
-                openedCount++;
-                
-                // Set as active tab if it's the first one
-                if (i === 0) {
-                  setActiveTab(id);
-                }
-              } catch (error) {
-                console.error(`Error reading file ${fileName}:`, error);
               }
-            }
-            
-            // Update UI
-            renderTabs();
-            
-            if (openedCount > 0) {
-              showToast(`Opened ${openedCount} file${openedCount > 1 ? 's' : ''}`);
-            } else {
-              showToast("No supported files were selected");
-            }
+            ],
+            multiple: false
           };
           
-          // Trigger file selection dialog
-          fileInput.click();
-        } catch (error) {
-          console.error("Error opening folder:", error);
-          showToast("Error opening folder");
+          const [fileHandle] = await window.showOpenFilePicker(options);
+          const file = await fileHandle.getFile();
+          const contents = await file.text();
+          
+          // Determine language from file extension
+          const fileName = file.name;
+          const extension = fileName.substring(fileName.lastIndexOf('.'));
+          let language = 'javascript'; // Default
+          
+          for (const lang of languages) {
+            if (lang.extensions.includes(extension)) {
+              language = lang.id;
+              break;
+            }
+          }
+          
+          // Create a new tab with the file contents
+          const id = Date.now();
+          const tab = {
+            id: id,
+            name: file.name,
+            displayName: file.name,
+            language: language,
+            content: contents,
+            isUnsaved: false,
+            fileHandle: fileHandle
+          };
+          
+          tabs.push(tab);
+          renderTabs();
+          setActiveTab(id);
+          
+          showToast(`Opened ${file.name}`);
+        } catch (err) {
+          // User cancelled or error occurred
+          if (err.name !== 'AbortError') {
+            showToast(`Error opening file: ${err.message}`);
+            console.error('Error opening file:', err);
+          }
         }
       }
       
-      // Helper function to read file content
-      function readFileContent(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          
-          reader.onload = (event) => {
-            resolve(event.target.result);
-          };
-          
-          reader.onerror = (error) => {
-            reject(error);
-          };
-          
-          reader.readAsText(file);
-        });
-      }
-      
-      // Save file
+      // Save file (local file system API)
       async function saveFile() {
         const tab = tabs.find(t => t.id === activeTab);
         if (!tab) return;
         
-        // Save file content to disk
-        const blob = new Blob([tab.content], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = tab.name;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        
-        // Mark file as saved
-        tab.isUnsaved = false;
-        renderTabs();
-        
-        showToast(`Saved ${tab.name}`);
-      }
-      
-      // Open folder - allows selecting a directory
-      async function openFolder() {
         try {
-          // Create a file input element with directory selection
-          const fileInput = document.createElement('input');
-          fileInput.type = 'file';
+          let fileHandle = tab.fileHandle;
           
-          // Support directory selection
-          fileInput.webkitdirectory = true;
-          fileInput.directory = true;
-          fileInput.multiple = true;
-          
-          // Handle file selection
-          fileInput.onchange = async (e) => {
-            const files = e.target.files;
-            
-            if (!files || files.length === 0) {
+          // If no file handle, show save file picker
+          if (!fileHandle) {
+            // Check if File System API is supported
+            if (!('showSaveFilePicker' in window)) {
+              showToast('File system access is not supported in this browser');
+              downloadFile(tab); // Fallback to download
               return;
             }
             
-            // Sort files to maintain folder structure
-            const sortedFiles = Array.from(files).sort((a, b) => 
-              a.webkitRelativePath.localeCompare(b.webkitRelativePath)
-            );
-            
-            // Track how many files were successfully opened
-            let openedCount = 0;
-            let skippedCount = 0;
-            
-            // Process each selected file
-            for (let i = 0; i < sortedFiles.length; i++) {
-              const file = sortedFiles[i];
-              const fileName = file.name;
-              const fileExtension = '.' + fileName.split('.').pop().toLowerCase();
-              
-              // Find appropriate language based on file extension
-              const language = languages.find(lang => 
-                lang.extensions.includes(fileExtension)
-              )?.id;
-              
-              // Skip files with unsupported extensions
-              if (!language) {
-                skippedCount++;
-                continue;
-              }
-              
-              try {
-                // Read file content
-                const content = await readFileContent(file);
-                
-                // Create a new tab for this file
-                const id = Date.now() + i; // Ensure unique ID
-                
-                // Extract path information from webkitRelativePath
-                let path = '';
-                if (file.webkitRelativePath) {
-                  const pathParts = file.webkitRelativePath.split('/');
-                  if (pathParts.length > 1) {
-                    pathParts.pop(); // Remove filename
-                    path = pathParts.join('/');
-                  }
+            const options = {
+              suggestedName: tab.name,
+              types: [
+                {
+                  description: 'Text File',
+                  accept: { 'text/plain': [getFileExtensionForLanguage(tab.language)] }
                 }
-                
-                const tab = {
-                  id: id,
-                  name: fileName,
-                  displayName: fileName,
-                  path: path,
-                  language: language,
-                  content: content,
-                  isUnsaved: false,
-                  fileHandle: null
-                };
-                
-                tabs.push(tab);
-                openedCount++;
-                
-                // Set as active tab if it's the first valid file
-                if (openedCount === 1) {
-                  setActiveTab(id);
-                }
-              } catch (error) {
-                console.error(`Error reading file ${fileName}:`, error);
-              }
-            }
+              ]
+            };
             
-            // Update UI
-            renderTabs();
-            
-            if (openedCount > 0) {
-              showToast(`Opened ${openedCount} file${openedCount > 1 ? 's' : ''} from folder`);
-              if (skippedCount > 0) {
-                console.log(`Skipped ${skippedCount} unsupported file(s)`);
-              }
-            } else {
-              showToast("No supported files were found in the folder");
-            }
-          };
+            fileHandle = await window.showSaveFilePicker(options);
+            tab.fileHandle = fileHandle;
+            tab.name = fileHandle.name;
+            tab.displayName = fileHandle.name;
+          }
           
-          // Trigger file selection dialog
-          fileInput.click();
-        } catch (error) {
-          console.error("Error opening folder:", error);
-          showToast("Error opening folder");
+          // Get writable stream and write content
+          const writable = await fileHandle.createWritable();
+          await writable.write(tab.content);
+          await writable.close();
+          
+          tab.isUnsaved = false;
+          renderTabs();
+          
+          showToast(`Saved ${tab.name}`);
+        } catch (err) {
+          // User cancelled or error occurred
+          if (err.name !== 'AbortError') {
+            showToast(`Error saving file: ${err.message}`);
+            console.error('Error saving file:', err);
+          }
         }
       }
       
-      // Download project as ZIP file
-      async function downloadProject() {
+      // Open folder (local file system API)
+      async function openFolder() {
+        try {
+          // Check if File System API is supported
+          if (!('showDirectoryPicker' in window)) {
+            showToast('Directory access is not supported in this browser');
+            return;
+          }
+          
+          const dirHandle = await window.showDirectoryPicker();
+          
+          // Store the directory handle for later use
+          const dirName = dirHandle.name;
+          showToast(`Opened folder: ${dirName}`);
+          
+          // You could list files in the directory here if needed
+        } catch (err) {
+          // User cancelled or error occurred
+          if (err.name !== 'AbortError') {
+            showToast(`Error opening folder: ${err.message}`);
+            console.error('Error opening folder:', err);
+          }
+        }
+      }
+      
+      // Download current file
+      function downloadFile(tab) {
+        if (!tab) {
+          tab = tabs.find(t => t.id === activeTab);
+          if (!tab) return;
+        }
+        
+        const blob = new Blob([tab.content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = tab.name;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        showToast(`Downloaded ${tab.name}`);
+      }
+      
+      // Download project as zip
+      function downloadProject() {
         if (tabs.length === 0) {
-          showToast("No files to download");
+          showToast('No files to download');
           return;
         }
         
-        try {
-          // Create a new JSZip instance
-          const zip = new JSZip();
-          
-          // Add all open files to the zip
-          tabs.forEach(tab => {
-            zip.file(tab.name, tab.content);
-          });
-          
-          // Generate the zip file
-          const zipBlob = await zip.generateAsync({ type: "blob" });
-          
+        // Create a new JSZip instance
+        const zip = new JSZip();
+        
+        // Add each tab to the zip
+        tabs.forEach(tab => {
+          zip.file(tab.name, tab.content);
+        });
+        
+        // Generate the zip file
+        zip.generateAsync({ type: 'blob' }).then(blob => {
           // Create a download link
-          const downloadLink = document.createElement("a");
-          downloadLink.href = URL.createObjectURL(zipBlob);
-          downloadLink.download = "codecrystal-project.zip";
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'code-crystal-project.zip';
+          a.click();
           
-          // Add to document, click and remove
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(url);
+          showToast('Project downloaded as zip');
+        }).catch(err => {
+          showToast(`Error creating zip: ${err.message}`);
+          console.error('Error creating zip:', err);
+        });
+      }
+      
+      // Load settings from form controls
+      function loadSettingsToForm() {
+        const accentColorPicker = document.getElementById('accent-color-picker');
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeValue = document.getElementById('font-size-value');
+        const lineWrapCheckbox = document.getElementById('line-wrap-checkbox');
+        const lineNumbersCheckbox = document.getElementById('line-numbers-checkbox');
+        
+        // Set theme option
+        document.querySelectorAll('.theme-option').forEach(btn => {
+          if (btn.dataset.theme === userSettings.theme) {
+            btn.classList.add('ring-2', 'ring-blue-500');
+          } else {
+            btn.classList.remove('ring-2', 'ring-blue-500');
+          }
+        });
+        
+        // Set accent color
+        if (accentColorPicker) {
+          accentColorPicker.value = userSettings.accentColor;
+        }
+        
+        // Set font size
+        if (fontSizeSlider && fontSizeValue) {
+          fontSizeSlider.value = userSettings.fontSize;
+          fontSizeValue.textContent = `${userSettings.fontSize}px`;
+        }
+        
+        // Set tab size
+        document.querySelectorAll('.tab-size-btn').forEach(btn => {
+          if (parseInt(btn.dataset.size) === userSettings.tabSize) {
+            btn.classList.add('bg-blue-600');
+          } else {
+            btn.classList.remove('bg-blue-600');
+          }
+        });
+        
+        // Set other options
+        if (lineWrapCheckbox) {
+          lineWrapCheckbox.checked = userSettings.lineWrap;
+        }
+        
+        if (lineNumbersCheckbox) {
+          lineNumbersCheckbox.checked = userSettings.lineNumbers;
+        }
+        
+        // Set syntax colors
+        document.querySelectorAll('.syntax-color-picker').forEach(picker => {
+          const element = picker.dataset.element;
+          if (userSettings.syntaxColors[element]) {
+            picker.value = userSettings.syntaxColors[element];
+          }
+        });
+      }
+      
+      // Save settings from form to userSettings object
+      function saveSettingsFromForm() {
+        const accentColorPicker = document.getElementById('accent-color-picker');
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const lineWrapCheckbox = document.getElementById('line-wrap-checkbox');
+        const lineNumbersCheckbox = document.getElementById('line-numbers-checkbox');
+        
+        // Get selected theme
+        let selectedTheme = userSettings.theme;
+        document.querySelectorAll('.theme-option').forEach(btn => {
+          if (btn.classList.contains('ring-2')) {
+            selectedTheme = btn.dataset.theme;
+          }
+        });
+        
+        // Get selected tab size
+        let selectedTabSize = userSettings.tabSize;
+        document.querySelectorAll('.tab-size-btn').forEach(btn => {
+          if (btn.classList.contains('bg-blue-600')) {
+            selectedTabSize = parseInt(btn.dataset.size);
+          }
+        });
+        
+        // Update settings object
+        userSettings.theme = selectedTheme;
+        userSettings.accentColor = accentColorPicker ? accentColorPicker.value : userSettings.accentColor;
+        userSettings.fontSize = fontSizeSlider ? parseInt(fontSizeSlider.value) : userSettings.fontSize;
+        userSettings.tabSize = selectedTabSize;
+        userSettings.lineWrap = lineWrapCheckbox ? lineWrapCheckbox.checked : userSettings.lineWrap;
+        userSettings.lineNumbers = lineNumbersCheckbox ? lineNumbersCheckbox.checked : userSettings.lineNumbers;
+        
+        // Update syntax colors
+        document.querySelectorAll('.syntax-color-picker').forEach(picker => {
+          const element = picker.dataset.element;
+          userSettings.syntaxColors[element] = picker.value;
+        });
+        
+        // Save to localStorage and cookies
+        saveSettings();
+      }
+      
+      // Apply settings to the editor and UI
+      function applySettings() {
+        // Apply theme
+        theme = userSettings.theme;
+        applyTheme();
+        
+        // Apply font size to CodeMirror
+        if (codeEditorInstance) {
+          const cm = codeEditorInstance.getWrapperElement();
+          if (cm) {
+            cm.style.fontSize = `${userSettings.fontSize}px`;
+          }
+        }
+        
+        // Apply tab size
+        if (codeEditorInstance) {
+          codeEditorInstance.setOption('tabSize', userSettings.tabSize);
+          codeEditorInstance.setOption('indentUnit', userSettings.tabSize);
+        }
+        
+        // Apply line wrapping
+        if (codeEditorInstance) {
+          codeEditorInstance.setOption('lineWrapping', userSettings.lineWrap);
+        }
+        
+        // Apply line numbers
+        if (codeEditorInstance) {
+          codeEditorInstance.setOption('lineNumbers', userSettings.lineNumbers);
+        }
+        
+        // Apply syntax colors
+        applySyntaxColors();
+      }
+      
+      // Apply theme to the UI
+      function applyTheme() {
+        const container = document.getElementById('editor-container');
+        
+        // Remove any previous theme styles
+        const oldThemeStyles = document.querySelectorAll('style[data-theme]');
+        oldThemeStyles.forEach(style => style.remove());
+        
+        // Reset container classes
+        container.classList.remove('bg-gray-900', 'text-gray-200', 'bg-gray-100', 'text-gray-800');
+        
+        // Apply selected theme
+        switch (theme) {
+          case 'dark':
+            container.classList.add('bg-gray-900', 'text-gray-200');
+            if (codeEditorInstance) {
+              codeEditorInstance.setOption('theme', 'dracula');
+            }
+            break;
+          case 'light':
+            container.classList.add('bg-gray-100', 'text-gray-800');
+            if (codeEditorInstance) {
+              codeEditorInstance.setOption('theme', 'default');
+              
+              // Add custom styles for light theme
+              const light = document.createElement('style');
+              light.setAttribute('data-theme', 'light');
+              light.innerHTML = `
+                body.bg-gray-100 { background-color: #e0e0e0 !important; }
+                .CodeMirror { background-color: #e0e0e0 !important; color: #333 !important; }
+                .CodeMirror-gutters { background-color: #d0d0d0 !important; border-right: 1px solid #bbb !important; }
+                .bg-gray-800 { background-color: #c8c8c8 !important; }
+                .bg-gray-700 { background-color: #bbb !important; }
+                .border-gray-700 { border-color: #aaa !important; }
+                .text-gray-400 { color: #444 !important; }
+                .text-gray-200 { color: #333 !important; }
+                .tab.active { background-color: #bbb !important; }
+                .terminal { background-color: #d5d5d5 !important; color: #333 !important; }
+                .sidebar-button { color: #444 !important; }
+                .sidebar-button:hover { background-color: rgba(0, 0, 0, 0.1) !important; }
+                .hover\\:bg-gray-700:hover { background-color: #aaa !important; }
+                .p-1.rounded svg { color: #444 !important; }
+                .settings-tab-btn { color: #444 !important; }
+                .settings-tab-btn.text-blue-400 { color: #3b82f6 !important; }
+                #editor-container { background-color: #e0e0e0 !important; }
+                #editor-area { background-color: #e0e0e0 !important; }
+                #code-editor { background-color: #e0e0e0 !important; }
+                .CodeMirror-scroll { background-color: #e0e0e0 !important; }
+                .CodeMirror-sizer { background-color: #e0e0e0 !important; }
+                .CodeMirror-gutter { background-color: #d0d0d0 !important; }
+                .CodeMirror-lines { background-color: #e0e0e0 !important; }
+                .CodeMirror pre.CodeMirror-line { background-color: #e0e0e0 !important; }
+                .CodeMirror-line { background-color: #e0e0e0 !important; }
+                .CodeMirror div, .CodeMirror span, .CodeMirror pre { background-color: #e0e0e0 !important; }
+                .CodeMirror-cursor { border-left-color: #000 !important; }
+                .cm-s-default { background-color: #e0e0e0 !important; }
+              `;
+              document.head.appendChild(light);
+            }
+            break;
+          case 'cosmic':
+            container.classList.add('bg-gray-900', 'text-gray-200');
+            if (codeEditorInstance) {
+              codeEditorInstance.setOption('theme', 'dracula');
+              
+              // Add custom styles for cosmic theme
+              const cosmic = document.createElement('style');
+              cosmic.setAttribute('data-theme', 'cosmic');
+              cosmic.innerHTML = `
+                .CodeMirror.cm-s-dracula { background-color: #1a1040 !important; }
+                .CodeMirror-gutters { background-color: #150b30 !important; }
+                .bg-gray-800 { background-color: #20165a !important; }
+                .bg-gray-700 { background-color: #2a1b78 !important; }
+                .border-gray-700 { border-color: #2a1b78 !important; }
+              `;
+              document.head.appendChild(cosmic);
+            }
+            break;
+          case 'ocean':
+            container.classList.add('bg-gray-900', 'text-gray-200');
+            if (codeEditorInstance) {
+              codeEditorInstance.setOption('theme', 'dracula');
+              
+              // Add custom styles for ocean theme
+              const ocean = document.createElement('style');
+              ocean.setAttribute('data-theme', 'ocean');
+              ocean.innerHTML = `
+                .CodeMirror.cm-s-dracula { background-color: #0a2a40 !important; }
+                .CodeMirror-gutters { background-color: #061825 !important; }
+                .bg-gray-800 { background-color: #0d3b5c !important; }
+                .bg-gray-700 { background-color: #124979 !important; }
+                .border-gray-700 { border-color: #124979 !important; }
+              `;
+              document.head.appendChild(ocean);
+            }
+            break;
+        }
+      }
+      
+      // Apply syntax colors
+      function applySyntaxColors() {
+        // Create or update custom CSS for syntax highlighting
+        let styleEl = document.getElementById('custom-syntax-colors');
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'custom-syntax-colors';
+          document.head.appendChild(styleEl);
+        }
+        
+        // Generate CSS rules
+        const css = `
+          .cm-keyword {
+            color: ${userSettings.syntaxColors.keyword} !important;
+            text-shadow: 0 0 8px ${hexToRgba(userSettings.syntaxColors.keyword, 0.6)} !important;
+          }
           
-          showToast("Project downloaded successfully");
-        } catch (error) {
-          console.error("Error downloading project:", error);
-          showToast("Error downloading project");
-        }
-      }
-      
-      // Show toast notification
-      function showToast(message) {
-        if (!toast) return;
+          .cm-def, .cm-variable-2, .cm-property {
+            color: ${userSettings.syntaxColors.def} !important;
+            text-shadow: 0 0 8px ${hexToRgba(userSettings.syntaxColors.def, 0.6)} !important;
+          }
+          
+          .cm-string {
+            color: ${userSettings.syntaxColors.string} !important;
+            text-shadow: 0 0 8px ${hexToRgba(userSettings.syntaxColors.string, 0.6)} !important;
+          }
+          
+          .cm-number {
+            color: ${userSettings.syntaxColors.number} !important;
+            text-shadow: 0 0 8px ${hexToRgba(userSettings.syntaxColors.number, 0.6)} !important;
+          }
+          
+          .cm-comment {
+            color: ${userSettings.syntaxColors.comment} !important;
+          }
+          
+          .cm-variable {
+            color: ${userSettings.syntaxColors.variable} !important;
+            text-shadow: 0 0 8px ${hexToRgba(userSettings.syntaxColors.variable, 0.6)} !important;
+          }
+          
+          /* Update example colors in settings */
+          .keyword-example { color: ${userSettings.syntaxColors.keyword}; }
+          .string-example { color: ${userSettings.syntaxColors.string}; }
+          .variable-example { color: ${userSettings.syntaxColors.variable}; }
+          .number-example { color: ${userSettings.syntaxColors.number}; }
+          .comment-example { color: ${userSettings.syntaxColors.comment}; }
+          .function-example { color: ${userSettings.syntaxColors.def}; }
+        `;
         
-        toast.textContent = message;
-        toast.classList.remove('hidden');
+        styleEl.textContent = css;
+      }
+      
+      // Helper function to convert hex color to rgba
+      function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+      
+      // Load settings from localStorage or cookies
+      function loadSettings() {
+        // Try to load from localStorage first
+        let settings = null;
+        const savedLocal = localStorage.getItem('codecrystal-settings');
         
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-          toast.classList.add('hidden');
-        }, 3000);
-      }
-      
-      // Get template for language
-      function getTemplateForLanguage(language) {
-        switch(language) {
-          case 'html':
-            return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  
-</body>
-</html>`;
-          case 'css':
-            return `/* Styles for your document */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-}
-`;
-          case 'javascript':
-            return `// JavaScript code
-console.log('Hello, world!');
-
-function init() {
-  // Your initialization code here
-}
-`;
-          case 'python':
-            return `# Python script
-
-def main():
-    # Print a simple greeting
-    print("Hello, world!")
-    
-    # Some basic Python examples
-    numbers = [1, 2, 3, 4, 5]
-    squared = [n**2 for n in numbers]
-    print(f"Original numbers: {numbers}")
-    print(f"Squared numbers: {squared}")
-    
-    # String operations
-    message = "Python in the browser!"
-    print(f"Message: {message}")
-    print(f"Uppercase: {message.upper()}")
-    print(f"Character count: {len(message)}")
-
-# Call the main function
-main()
-`;
-          case 'rust':
-            return `// Rust program
-
-fn main() {
-    println!("Hello, world!");
-}
-`;
-          case 'go':
-            return `// Go program
-package main
-
-import "fmt"
-
-func main() {
-    fmt.Println("Hello, world!")
-}
-`;
-          default:
-            return '// Start typing your code here...';
+        if (savedLocal) {
+          try {
+            settings = JSON.parse(savedLocal);
+          } catch (e) {
+            console.error('Error loading settings from localStorage:', e);
+          }
         }
-      }
-      
-      // Get file extension for language
-      function getFileExtensionForLanguage(language) {
-        switch(language) {
-          case 'javascript': return '.js';
-          case 'python': return '.py';
-          case 'rust': return '.rs';
-          case 'go': return '.go';
-          case 'html': return '.html';
-          case 'css': return '.css';
-          default: return '.txt';
+        
+        // If localStorage failed, try cookies as backup
+        if (!settings) {
+          const cookieData = getCookie('codecrystal-settings');
+          if (cookieData) {
+            settings = cookieData;
+          }
         }
+        
+        // Apply the loaded settings if any were found
+        if (settings) {
+          userSettings = { ...userSettings, ...settings };
+        }
+        
+        applySettings();
       }
       
-      // Get language color
-      function getLanguageColor(language) {
-        return languages.find(l => l.id === language)?.color || '#ffffff';
+      // Cookie utility functions
+      function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+          const date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + encodeURIComponent(JSON.stringify(value)) + expires + "; path=/";
+      }
+      
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) {
+            try {
+              return JSON.parse(decodeURIComponent(c.substring(nameEQ.length, c.length)));
+            } catch (e) {
+              console.error('Error parsing cookie value:', e);
+              return null;
+            }
+          }
+        }
+        return null;
+      }
+      
+      // Save settings to both localStorage and cookies for redundancy
+      function saveSettings() {
+        // Save to localStorage (primary method)
+        localStorage.setItem('codecrystal-settings', JSON.stringify(userSettings));
+        
+        // Also save to cookies as backup (expires in 30 days)
+        setCookie('codecrystal-settings', userSettings, 30);
+      }
+      
+      // Update toggleTheme to work with our settings system
+      function toggleTheme() {
+        // Just cycle through themes
+        const themes = ['dark', 'light', 'cosmic', 'ocean'];
+        const currentIndex = themes.indexOf(userSettings.theme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        userSettings.theme = themes[nextIndex];
+        
+        // Apply the theme
+        theme = userSettings.theme;
+        applyTheme();
+        
+        // Apply syntax colors (in case theme affects these)
+        applySyntaxColors();
+        
+        // Save settings
+        saveSettings();
       }
     });
   </script>
