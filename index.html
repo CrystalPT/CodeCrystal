@@ -30,6 +30,9 @@
   <!-- JSZip Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%238b5cf6%22><path d=%22M16 18l6-6-6-6M8 6l-6 6 6 6%22/></svg>">
+  
   <style>
     body, html {
       margin: 0;
@@ -1253,7 +1256,7 @@ func main() {
         
         showPreview = !showPreview;
         
-        if (showPreview) {
+            if (showPreview) {
           previewPanel.classList.remove('hidden');
           editorArea.classList.remove('w-full');
           editorArea.classList.add('w-1/2');
@@ -1271,7 +1274,7 @@ func main() {
         
         showTerminal = !showTerminal;
         
-        if (showTerminal) {
+            if (showTerminal) {
           terminalPanel.classList.remove('hidden');
           if (showPreview) {
             // Both panels are visible, adjust sizes
@@ -1281,7 +1284,7 @@ func main() {
             previewPanel.classList.add('w-1/3');
             terminalPanel.classList.remove('w-1/2');
             terminalPanel.classList.add('w-1/3');
-          } else {
+            } else {
             editorArea.classList.remove('w-full');
             editorArea.classList.add('w-1/2');
             terminalPanel.classList.remove('w-1/2');
@@ -1410,7 +1413,7 @@ func main() {
             runWithCustomConsole(consoleMethods);
             
             writeToTerminal('Code executed successfully', 'terminal-success');
-          } catch (error) {
+        } catch (error) {
             writeToTerminal(`Error: ${error.message}`, 'terminal-error');
           }
         } else if (tab.language === 'python') {
@@ -1428,28 +1431,28 @@ func main() {
         
         try {
           // Load Pyodide if not already loaded
-          if (!pyodideInstance) {
+        if (!pyodideInstance) {
             if (pyodideLoading) {
               writeToTerminal('Python environment is still loading, please wait...', 'terminal-warning');
-              return;
-            }
+          return;
+        }
             
             pyodideLoading = true;
             writeToTerminal('Loading Python (this may take a moment on first run)...', 'terminal-warning');
-            
-            try {
+        
+        try {
               pyodideInstance = await loadPyodide();
               writeToTerminal('Python environment loaded successfully!', 'terminal-success');
-              
+          
               // Add custom print function that writes to terminal
               await pyodideInstance.runPythonAsync(`
-                import sys
+            import sys
                 from js import writeToTerminalFromPython
                 
                 class CustomStdout:
-                    def write(self, text):
+                def write(self, text):
                         writeToTerminalFromPython(text)
-                    def flush(self):
+                def flush(self):
                         pass
                 
                 sys.stdout = CustomStdout()
@@ -1539,7 +1542,7 @@ func main() {
           if (linkedFiles[cssTabId] === currentTab.id) {
             isLinked = true;
             const cssTab = tabs.find(t => t.id === parseInt(cssTabId));
-            if (cssTab) {
+              if (cssTab) {
               linkedCssName = cssTab.name;
             }
             break;
@@ -1550,7 +1553,7 @@ func main() {
           linkedCssInfo.textContent = `Linked to: ${linkedCssName}`;
           linkedCssInfo.classList.remove('hidden');
           linkCssBtn.textContent = 'Unlink CSS';
-        } else {
+              } else {
           linkedCssInfo.classList.add('hidden');
           linkCssBtn.textContent = 'Link CSS';
         }
@@ -1569,9 +1572,9 @@ func main() {
           if (linkedFiles[cssTabId] === htmlTab.id) {
             isLinked = true;
             linkedCssTabId = parseInt(cssTabId);
-            break;
-          }
-        }
+                break;
+              }
+            }
         
         if (isLinked && linkedCssTabId) {
           // Unlink the CSS file
@@ -1606,7 +1609,7 @@ func main() {
             updateLinkedCssInfo();
             showToast(`Linked to ${selectedCss.name}`);
             updatePreview(true);
-          } else {
+              } else {
             showToast(`CSS file '${cssFile}' not found`);
           }
         }
@@ -1650,20 +1653,20 @@ func main() {
           }
           
           // Create a new tab with the file contents
-          const id = Date.now();
-          const tab = {
-            id: id,
+        const id = Date.now();
+        const tab = {
+          id: id,
             name: file.name,
             displayName: file.name,
-            language: language,
+          language: language,
             content: contents,
             isUnsaved: false,
             fileHandle: fileHandle
-          };
-          
-          tabs.push(tab);
-          renderTabs();
-          setActiveTab(id);
+        };
+        
+        tabs.push(tab);
+        renderTabs();
+        setActiveTab(id);
           
           showToast(`Opened ${file.name}`);
         } catch (err) {
@@ -1714,8 +1717,8 @@ func main() {
           await writable.close();
           
           tab.isUnsaved = false;
-          renderTabs();
-          
+        renderTabs();
+        
           showToast(`Saved ${tab.name}`);
         } catch (err) {
           // User cancelled or error occurred
