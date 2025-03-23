@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeCrystal IDE</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/ruby/ruby.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/go/go.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%238b5cf6%22><path d=%22M16 18l6-6-6-6M8 6l-6 6 6 6%22/></svg>">
+  <link rel="stylesheet" href="style.css">
+  
+</head>
+<body class="bg-gray-900 text-gray-200">
+  <div id="editor-container" class="flex flex-col h-screen">
+    <div class="flex items-center justify-between p-2 border-b border-gray-700">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2 text-purple-500" viewBox="0 0 24 24" fill="none" 
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span class="font-bold text-lg">CodeCrystal IDE</span>
+        <span id="file-counter" class="text-xs ml-4 text-gray-400">No files open</span>
+      </div>
+      <div class="flex space-x-3">
+        <div class="relative group">
+          <button id="new-file-btn" class="p-1 rounded hover:bg-gray-700" title="New File (Ctrl+N)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+          </button>
+          <div id="new-file-dropdown" class="absolute hidden bg-gray-800 border border-gray-700 rounded shadow-lg p-2 z-10 right-0 mt-1">
+            <div class="text-xs font-bold mb-1 text-gray-400">New file as:</div>
+            <div id="language-options"></div>
+          </div>
+        </div>
+        <button id="open-file-btn" class="p-1 rounded hover:bg-gray-700" title="Open File (Ctrl+O)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 8V5a2 2 0 0 1 2-2h7.5L19 7.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"></path>
+            <path d="M12 18v-6"></path>
+            <path d="m9 15 3-3 3 3"></path>
+          </svg>
+        </button>
+        <button id="save-file-btn" class="p-1 rounded hover:bg-gray-700" title="Save File (Ctrl+S)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+        </button>
+        <button id="settings-btn" class="p-1 rounded hover:bg-gray-700" title="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+      <div class="w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700">
+        <button id="open-folder-btn" class="sidebar-button" title="Open Folder">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+          </svg>
+        </button>
+        <button id="rename-file-btn" class="sidebar-button" title="Rename Current File">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+        <button id="preview-toggle-btn" class="sidebar-button" title="Toggle Preview">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+        <button id="terminal-toggle-btn" class="sidebar-button" title="Toggle Terminal">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+        </button>
+        <button id="run-code-sidebar-btn" class="sidebar-button" title="Run Code (F5)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+        <button id="download-project-btn" class="sidebar-button" title="Download Project">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" 
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex-1 flex flex-col overflow-hidden">
+
+        <div id="tabs-container" class="flex border-b border-gray-700 overflow-x-auto"></div>
+
+        <div id="language-bar" class="flex items-center p-2 bg-gray-800">
+          <span class="mr-2 text-sm">Language:</span>
+          <div id="language-selector" class="flex space-x-2 overflow-x-auto"></div>
+
+          <div id="link-css-container" class="ml-auto hidden">
+            <button id="link-css-btn" class="px-2 py-1 bg-purple-600 text-white rounded text-xs flex items-center">
+              Link CSS File
+            </button>
+            <span id="linked-css-info" class="ml-2 text-xs hidden"></span>
+          </div>
+        </div>
+        
+        <div id="editor-preview-container" class="flex-1 flex overflow-hidden">
+          <div id="editor-area" class="relative w-full">
+            <div id="code-editor"></div>
+          </div>
+          
+          <div id="preview-panel" class="hidden w-1/2 border-l border-gray-700 flex flex-col">
+            <div class="p-2 bg-gray-800 flex justify-between items-center">
+              <span class="text-sm font-medium">Live Preview</span>
+              <button id="refresh-preview-btn" class="px-2 py-1 bg-green-600 text-white rounded text-xs">
+                Refresh
+              </button>
+            </div>
+            <div class="flex-1 bg-white overflow-auto">
+              <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none;" title="Preview"></iframe>
+            </div>
+          </div>
+          
+          <div id="terminal-panel" class="hidden w-1/2 border-l border-gray-700 flex flex-col">
+            <div class="p-2 bg-gray-800 flex justify-between items-center">
+              <span class="text-sm font-medium">Terminal</span>
+              <div class="flex space-x-2">
+                <button id="clear-terminal-btn" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">
+                  Clear
+                </button>
+                <button id="run-code-btn" class="px-2 py-1 bg-green-600 text-white rounded text-xs flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" 
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Run
+                </button>
+              </div>
+            </div>
+            <div id="terminal" class="terminal flex-1 overflow-auto">
+              <div class="terminal-line">Welcome to CodeCrystal Terminal. Press Run to execute your code.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex justify-between items-center px-4 py-1 text-sm bg-gray-800 text-gray-400">
+      <div>
+        <span id="cursor-position" class="mr-4">Line: 1, Col: 1</span>
+        <span>Spaces: 2</span>
+      </div>
+      <div>
+        <span id="language-indicator" class="px-2 py-1 rounded"></span>
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast hidden"></div>
+  
+  <div id="settings-modal" class="fixed inset-0 flex items-center justify-center hidden z-50">
+    <div class="fixed inset-0 bg-black opacity-50" id="settings-backdrop"></div>
+    <div class="bg-gray-800 rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto relative z-10">
+      <div class="flex justify-between items-center p-4 border-b border-gray-700">
+        <h2 class="text-xl font-bold">CodeCrystal Settings</h2>
+        <button id="close-settings-btn" class="text-gray-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="p-4">
+        <div class="flex border-b border-gray-700 mb-4">
+          <button class="settings-tab-btn px-4 py-2 text-blue-400 border-b-2 border-blue-400" data-tab="theme">Theme</button>
+          <button class="settings-tab-btn px-4 py-2 text-gray-400" data-tab="editor">Editor</button>
+          <button class="settings-tab-btn px-4 py-2 text-gray-400" data-tab="colors">Syntax Colors</button>
+        </div>
+        
+        <div class="settings-tab-content" id="theme-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Editor Theme</h3>
+            <div class="flex space-x-2">
+              <button class="theme-option px-4 py-2 rounded bg-gray-700 text-white" data-theme="dark">Dark</button>
+              <button class="theme-option px-4 py-2 rounded bg-gray-400 text-gray-800" data-theme="light">Light</button>
+              <button class="theme-option px-4 py-2 rounded bg-purple-900 text-white" data-theme="cosmic">Cosmic</button>
+              <button class="theme-option px-4 py-2 rounded bg-blue-900 text-white" data-theme="ocean">Ocean</button>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Accent Color</h3>
+            <div class="flex items-center space-x-3">
+              <input type="color" id="accent-color-picker" value="#8b5cf6" class="w-12 h-12 rounded cursor-pointer">
+              <span class="text-sm text-gray-400">This color will be used for UI highlights</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-tab-content hidden" id="editor-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Font Size</h3>
+            <div class="flex items-center">
+              <input type="range" id="font-size-slider" min="10" max="24" value="14" class="w-full mr-3">
+              <span id="font-size-value" class="text-gray-300 w-10">14px</span>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Tab Size</h3>
+            <div class="flex space-x-2">
+              <button class="tab-size-btn px-3 py-1 rounded bg-gray-700" data-size="2">2 spaces</button>
+              <button class="tab-size-btn px-3 py-1 rounded bg-gray-700" data-size="4">4 spaces</button>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Other Options</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" id="line-wrap-checkbox" class="mr-2">
+                <span>Enable line wrapping</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="line-numbers-checkbox" checked class="mr-2">
+                <span>Show line numbers</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-tab-content hidden" id="colors-settings">
+          <div class="mb-4">
+            <h3 class="text-lg font-medium mb-2">Syntax Highlighting</h3>
+            <p class="text-sm text-gray-400 mb-4">Customize the syntax highlighting colors for all languages</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Keywords</label>
+                  <input type="color" class="syntax-color-picker" data-element="keyword" value="#ff9d00">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="keyword-example">function</code> <code>return</code> <code>if</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Strings</label>
+                  <input type="color" class="syntax-color-picker" data-element="string" value="#7ec699">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="string-example">"Hello, world!"</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Variables</label>
+                  <input type="color" class="syntax-color-picker" data-element="variable" value="#e06c75">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="variable-example">myVariable</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Numbers</label>
+                  <input type="color" class="syntax-color-picker" data-element="number" value="#7fcef5">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="number-example">42</code> <code>3.14</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Comments</label>
+                  <input type="color" class="syntax-color-picker" data-element="comment" value="#676e95">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="comment-example">// This is a comment</code>
+                </div>
+              </div>
+              
+              <div class="syntax-color-item">
+                <div class="flex justify-between items-center mb-1">
+                  <label>Functions</label>
+                  <input type="color" class="syntax-color-picker" data-element="def" value="#c792ea">
+                </div>
+                <div class="p-2 rounded bg-gray-900">
+                  <code class="function-example">myFunction()</code>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4">
+              <button id="reset-colors-btn" class="px-3 py-1 bg-red-600 text-white rounded">Reset to Defaults</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-end p-4 border-t border-gray-700">
+        <button id="save-settings-btn" class="px-4 py-2 bg-blue-600 text-white rounded">Save Settings</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="handle.js"></script>
+</body>
+</html>

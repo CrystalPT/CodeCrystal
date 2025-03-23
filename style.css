@@ -1,0 +1,303 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  .cm-keyword {
+    color: #ff9d00 !important;
+    text-shadow: 0 0 8px rgba(255, 157, 0, 0.6) !important;
+    font-weight: bold !important;
+  }
+  
+  .cm-def, .cm-variable-2, .cm-property {
+    color: #c792ea !important;
+    text-shadow: 0 0 8px rgba(199, 146, 234, 0.6) !important;
+  }
+  
+  .cm-string {
+    color: #7ec699 !important;
+    text-shadow: 0 0 8px rgba(126, 198, 153, 0.6) !important;
+  }
+  
+  .cm-number {
+    color: #7fcef5 !important;
+    text-shadow: 0 0 8px rgba(127, 206, 245, 0.6) !important;
+  }
+  
+  .cm-comment {
+    color: #676e95 !important;
+    font-style: italic !important;
+  }
+  
+  .cm-variable {
+    color: #e06c75 !important;
+    text-shadow: 0 0 8px rgba(224, 108, 117, 0.6) !important;
+  }
+  
+  .cm-operator {
+    color: #f9f9f9 !important;
+    text-shadow: 0 0 8px rgba(249, 249, 249, 0.6) !important;
+  }
+  
+  .cm-tag {
+    color: #ff5370 !important;
+    text-shadow: 0 0 8px rgba(255, 83, 112, 0.6) !important;
+  }
+  
+  .cm-attribute {
+    color: #ffcb6b !important;
+    text-shadow: 0 0 8px rgba(255, 203, 107, 0.6) !important;
+  }
+  
+  .CodeMirror {
+    height: 100% !important;
+    font-family: monospace !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+  
+  .CodeMirror-gutters {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-right: none !important;
+  }
+  
+  .CodeMirror-linenumber {
+    color: #909090 !important;
+  }
+  
+  .terminal {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    padding: 10px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    height: 100%;
+  }
+  
+  .terminal-error {
+    color: #ff6b6b;
+  }
+  
+  .terminal-success {
+    color: #6bff6b;
+  }
+  
+  .terminal-warning {
+    color: #ffde6b;
+  }
+  
+  .terminal-line {
+    margin: 0;
+    padding: 2px 0;
+  }
+  
+  .file-badge {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-right: 8px;
+  }
+  
+  .unsaved-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: #f87171;
+    display: inline-block;
+    margin-left: 6px;
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+  }
+  
+  .language-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    margin-right: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    min-width: 80px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .language-badge:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  .tab {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    padding-right: 8px;
+    cursor: pointer;
+    border-right: 1px solid #2d3748;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    max-width: 200px;
+  }
+  
+  .tab.active {
+    background-color: #2d3748;
+  }
+  
+  .tab-name-container {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .tab-actions {
+    display: flex;
+    margin-left: 4px;
+    opacity: 0.7;
+  }
+  
+  .tab:hover .tab-actions {
+    opacity: 1;
+  }
+  
+  .tab-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-left: 2px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+  
+  .tab-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .sidebar-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    color: #cccccc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .sidebar-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  /* Fix scrolling issue - revised with conditional scrollbars */
+  .CodeMirror-scroll {
+    overflow: auto !important; /* Only show scrollbars when needed */
+    height: auto !important;
+    min-height: 100%;
+    max-height: none !important;
+    width: 100% !important;
+    background-color: inherit !important; /* Ensure background inherits properly */
+  }
+  
+  #code-editor {
+    overflow: visible !important;
+    height: 100% !important;
+    width: 100% !important;
+    position: relative;
+  }
+  
+  /* Custom scrollbar styling */
+  .CodeMirror-vscrollbar::-webkit-scrollbar,
+  .CodeMirror-scroll::-webkit-scrollbar {
+    width: 8px;
+    background-color: rgba(30, 30, 40, 0.5);
+  }
+  
+  .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+  .CodeMirror-scroll::-webkit-scrollbar-thumb {
+    background-color: #8b5cf6; /* Purple to match CodeCrystal theme */
+    border-radius: 4px;
+  }
+  
+  .CodeMirror-hscrollbar::-webkit-scrollbar,
+  .CodeMirror-scroll::-webkit-scrollbar:horizontal {
+    height: 8px;
+    background-color: rgba(30, 30, 40, 0.5);
+  }
+  
+  .CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+  .CodeMirror-scroll::-webkit-scrollbar-thumb:horizontal {
+    background-color: #8b5cf6;
+    border-radius: 4px;
+  }
+  
+  /* Firefox scrollbar styling */
+  .CodeMirror-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #8b5cf6 rgba(30, 30, 40, 0.5);
+  }
+  
+  /* Ensure the editor's main container is scrollable */
+  .CodeMirror {
+    height: calc(100vh - 140px) !important;
+    overflow: visible !important;
+    background-color: #1e1e2e !important; /* Dark theme background */
+  }
+
+  /* Fix for scrollable content areas */
+  .CodeMirror-sizer,
+  .CodeMirror-lines,
+  .CodeMirror-gutter,
+  .CodeMirror-gutters,
+  .CodeMirror-linenumber {
+    background-color: inherit !important;
+  }
+
+  /* Make sure parent containers don't interfere with scrolling */
+  #editor-area {
+    overflow: visible !important;
+    height: auto !important;
+    background-color: #1e1e2e !important; /* Dark theme background */
+  }
+  
+  #editor-preview-container {
+    overflow: auto !important;
+  }
+
+  /* Add this class for light theme support */
+  .light-theme .CodeMirror,
+  .light-theme .CodeMirror-scroll,
+  .light-theme .CodeMirror-sizer,
+  .light-theme .CodeMirror-lines,
+  .light-theme #editor-area {
+    background-color: #f8f9fa !important; /* Light theme background */
+  }
+
+  .light-theme .CodeMirror-gutters {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
