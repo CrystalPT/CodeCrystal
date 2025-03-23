@@ -1378,13 +1378,30 @@ func main() {
         
         if (tab.language === 'html') {
           const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+          
+          // For preview, embed CSS content directly instead of linking
+          // (this prevents 404 errors for CSS files that don't exist as real files)
           let content = tab.content;
           
-          for (const tabId in linkedFiles) {
-            if (linkedFiles[tabId] === tab.id) {
-              const cssTab = tabs.find(t => t.id === parseInt(tabId));
-              if (cssTab && cssTab.language === 'css') {
-                content = content.replace('</head>', `<style>${cssTab.content}</style></head>`);
+          // Find all linked CSS files and embed their content
+          const linkRegex = /<link[^>]*href=["']([^"']+\.css)["'][^>]*>/g;
+          let match;
+          
+          while ((match = linkRegex.exec(content)) !== null) {
+            const cssFileName = match[1];
+            const cssTab = tabs.find(t => t.name === cssFileName && t.language === 'css');
+            
+            if (cssTab) {
+              // Create a style tag with the CSS content
+              const styleTag = `<style>/* ${cssFileName} */\n${cssTab.content}\n</style>`;
+              
+              // Replace the link tag with the style tag in the preview (but not in the actual code)
+              const contentForPreview = content.replace(match[0], styleTag);
+              
+              if (contentForPreview !== content) {
+                content = contentForPreview;
+                // Reset regex to find other potential link tags
+                linkRegex.lastIndex = 0;
               }
             }
           }
@@ -1397,14 +1414,7 @@ func main() {
             if (linkedFiles[htmlTabId] === tab.id) {
               const htmlTab = tabs.find(t => t.id === parseInt(htmlTabId));
               if (htmlTab && htmlTab.language === 'html') {
-                const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-                let content = htmlTab.content;
-                
-                content = content.replace('</head>', `<style>${tab.content}</style></head>`);
-                
-                doc.open();
-                doc.write(content);
-                doc.close();
+                updatePreview(true); // Recursive call to update as if the HTML tab was active
                 break;
               }
             }
@@ -1482,9 +1492,13 @@ func main() {
         // Create link tag
         const linkTag = `<link rel="stylesheet" href="${cssTab.name}">`;
         
-        // Add link tag to head
+        // Add link tag to head with proper indentation
         if (!htmlTab.content.includes(linkTag)) {
-          htmlTab.content = htmlTab.content.replace('<head>', `<head>\n    ${linkTag}`);
+          // Detect indentation in the HTML file
+          const headMatch = htmlTab.content.match(/(\s*)<head>/);
+          const indent = headMatch && headMatch[1] ? headMatch[1] + '  ' : '    ';
+          
+          htmlTab.content = htmlTab.content.replace('<head>', `<head>\n${indent}${linkTag}`);
           htmlTab.isUnsaved = true;
           
           if (codeEditorInstance && activeTab === htmlTab.id) {
@@ -1531,24 +1545,34 @@ func main() {
         const tab = tabs.find(t => t.id === tabId);
         if (!tab) return;
         
-        const newName = prompt('Enter new file name:', tab.name);
-        if (!newName || newName === tab.name) return;
-        
         const oldName = tab.name;
+        const oldExtension = oldName.includes('.') ? oldName.substring(oldName.lastIndexOf('.')) : '';
+        
+        // Suggest the name without extension for better user experience
+        const nameWithoutExt = oldName.includes('.') ? oldName.substring(0, oldName.lastIndexOf('.')) : oldName;
+        let newName = prompt('Enter new file name:', nameWithoutExt);
+        
+        if (!newName || newName === nameWithoutExt) return;
+        
+        // Make sure extension is preserved
+        if (oldExtension && !newName.endsWith(oldExtension)) {
+          newName += oldExtension;
+        }
+        
         tab.name = newName;
         tab.displayName = newName;
         tab.isUnsaved = true;
         
         // If this is a CSS file, update any HTML files that link to it
         if (tab.language === 'css') {
-          for (const htmlTabId in linkedFiles) {
-            if (linkedFiles[htmlTabId] === tab.id) {
-              const htmlTab = tabs.find(t => t.id === parseInt(htmlTabId));
-              if (htmlTab && htmlTab.language === 'html') {
-                // Update the link tag in the HTML content
-                const linkRegex = new RegExp(`<link[^>]*href=['"]${oldName}['"][^>]*>`, 'g');
-                const newLinkTag = `<link rel="stylesheet" href="${newName}">`;
-                htmlTab.content = htmlTab.content.replace(linkRegex, newLinkTag);
+          tabs.forEach(htmlTab => {
+            if (htmlTab.language === 'html' && htmlTab.content.includes(`href="${oldName}"`)) {
+              // Update the link tag in the HTML content
+              const regex = new RegExp(`<link[^>]*href=["']${oldName}["'][^>]*>`, 'g');
+              const newLinkTag = `<link rel="stylesheet" href="${newName}">`;
+              
+              if (regex.test(htmlTab.content)) {
+                htmlTab.content = htmlTab.content.replace(regex, newLinkTag);
                 htmlTab.isUnsaved = true;
                 
                 if (codeEditorInstance && activeTab === htmlTab.id) {
@@ -1556,7 +1580,7 @@ func main() {
                 }
               }
             }
-          }
+          });
         }
         
         renderTabs();
@@ -1605,34 +1629,6 @@ func main() {
         
         if (tab.language === 'html' && linkCssContainer) {
           linkCssContainer.classList.add('hidden');
-        }
-      }
-      
-      function updatePreview(force = false) {
-        if (!showPreview && !force) return;
-        if (!previewPanel || !previewIframe) return;
-        
-        const tab = tabs.find(t => t.id === activeTab);
-        if (!tab) return;
-        
-        if (tab.language === 'html') {
-          const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-          doc.open();
-          doc.write(tab.content);
-          doc.close();
-        } else if (tab.language === 'css') {
-          for (const htmlTabId in linkedFiles) {
-            if (linkedFiles[htmlTabId] === tab.id) {
-              const htmlTab = tabs.find(t => t.id === parseInt(htmlTabId));
-              if (htmlTab && htmlTab.language === 'html') {
-                const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-                doc.open();
-                doc.write(htmlTab.content);
-                doc.close();
-                break;
-              }
-            }
-          }
         }
       }
       
