@@ -1412,7 +1412,7 @@ func main() {
         }
       }
       
-      function updateLinkedCssInfo() {
+      function linkCssFile() {
         if (!linkCssContainer || !linkedCssInfo || !linkCssBtn) return;
         
         const currentTab = tabs.find(t => t.id === activeTab);
@@ -1461,6 +1461,34 @@ func main() {
           } else {
             showToast(`CSS file '${cssFile}' not found`);
           }
+        }
+      }
+      
+      function updateLinkedCssInfo() {
+        if (!linkedCssInfo) return;
+        
+        const currentTab = tabs.find(t => t.id === activeTab);
+        if (!currentTab || currentTab.language !== 'html') return;
+        
+        let linkedCssName = null;
+        
+        for (const cssTabId in linkedFiles) {
+          if (linkedFiles[cssTabId] === currentTab.id) {
+            const cssTab = tabs.find(t => t.id === parseInt(cssTabId));
+            if (cssTab) {
+              linkedCssName = cssTab.name;
+              break;
+            }
+          }
+        }
+        
+        if (linkedCssName) {
+          linkedCssInfo.textContent = `Linked to: ${linkedCssName}`;
+          linkedCssInfo.classList.remove('hidden');
+          linkCssBtn.textContent = 'Unlink CSS';
+        } else {
+          linkedCssInfo.classList.add('hidden');
+          linkCssBtn.textContent = 'Link CSS File';
         }
       }
       
@@ -1714,6 +1742,176 @@ func main() {
         });
         
         saveSettings();
+      }
+      
+      function applySettings() {
+        if (!codeEditorInstance) return;
+        
+        codeEditorInstance.setOption('lineWrapping', userSettings.lineWrap);
+        codeEditorInstance.setOption('lineNumbers', userSettings.lineNumbers);
+        codeEditorInstance.setOption('tabSize', userSettings.tabSize);
+        codeEditorInstance.setOption('indentUnit', userSettings.tabSize);
+        
+        document.querySelector('.CodeMirror').style.fontSize = `${userSettings.fontSize}px`;
+        
+        let themeClass = 'dark';
+        switch(userSettings.theme) {
+          case 'light':
+            themeClass = 'cm-s-default';
+            document.body.classList.remove('bg-gray-900');
+            document.body.classList.add('bg-gray-100');
+            document.querySelectorAll('.bg-gray-800').forEach(el => {
+              el.classList.remove('bg-gray-800');
+              el.classList.add('bg-gray-200');
+            });
+            document.querySelectorAll('.text-gray-200').forEach(el => {
+              el.classList.remove('text-gray-200');
+              el.classList.add('text-gray-800');
+            });
+            break;
+          case 'cosmic':
+            themeClass = 'cm-s-dracula';
+            document.body.classList.remove('bg-gray-100');
+            document.body.classList.add('bg-gray-900');
+            document.querySelectorAll('.bg-gray-200').forEach(el => {
+              el.classList.remove('bg-gray-200');
+              el.classList.add('bg-gray-800');
+            });
+            document.querySelectorAll('.text-gray-800').forEach(el => {
+              el.classList.remove('text-gray-800');
+              el.classList.add('text-gray-200');
+            });
+            break;
+          case 'ocean':
+            themeClass = 'cm-s-dracula';
+            document.body.classList.remove('bg-gray-100');
+            document.body.classList.add('bg-gray-900');
+            document.querySelectorAll('.bg-gray-200').forEach(el => {
+              el.classList.remove('bg-gray-200');
+              el.classList.add('bg-gray-800');
+            });
+            document.querySelectorAll('.text-gray-800').forEach(el => {
+              el.classList.remove('text-gray-800');
+              el.classList.add('text-gray-200');
+            });
+            break;
+          default:
+            themeClass = 'cm-s-dracula';
+            document.body.classList.remove('bg-gray-100');
+            document.body.classList.add('bg-gray-900');
+            document.querySelectorAll('.bg-gray-200').forEach(el => {
+              el.classList.remove('bg-gray-200');
+              el.classList.add('bg-gray-800');
+            });
+            document.querySelectorAll('.text-gray-800').forEach(el => {
+              el.classList.remove('text-gray-800');
+              el.classList.add('text-gray-200');
+            });
+        }
+        
+        codeEditorInstance.setOption('theme', themeClass === 'cm-s-dracula' ? 'dracula' : 'default');
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'syntax-colors-style';
+        
+        const existingStyle = document.getElementById('syntax-colors-style');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+        
+        let css = `
+          .cm-keyword {
+            color: ${userSettings.syntaxColors.keyword} !important;
+            text-shadow: 0 0 8px ${addAlpha(userSettings.syntaxColors.keyword, 0.6)} !important;
+            font-weight: bold !important;
+          }
+          
+          .cm-def, .cm-variable-2, .cm-property {
+            color: ${userSettings.syntaxColors.def} !important;
+            text-shadow: 0 0 8px ${addAlpha(userSettings.syntaxColors.def, 0.6)} !important;
+          }
+          
+          .cm-string {
+            color: ${userSettings.syntaxColors.string} !important;
+            text-shadow: 0 0 8px ${addAlpha(userSettings.syntaxColors.string, 0.6)} !important;
+          }
+          
+          .cm-number {
+            color: ${userSettings.syntaxColors.number} !important;
+            text-shadow: 0 0 8px ${addAlpha(userSettings.syntaxColors.number, 0.6)} !important;
+          }
+          
+          .cm-comment {
+            color: ${userSettings.syntaxColors.comment} !important;
+            font-style: italic !important;
+          }
+          
+          .cm-variable {
+            color: ${userSettings.syntaxColors.variable} !important;
+            text-shadow: 0 0 8px ${addAlpha(userSettings.syntaxColors.variable, 0.6)} !important;
+          }
+          
+          .keyword-example { color: ${userSettings.syntaxColors.keyword}; }
+          .string-example { color: ${userSettings.syntaxColors.string}; }
+          .variable-example { color: ${userSettings.syntaxColors.variable}; }
+          .number-example { color: ${userSettings.syntaxColors.number}; }
+          .comment-example { color: ${userSettings.syntaxColors.comment}; }
+          .function-example { color: ${userSettings.syntaxColors.def}; }
+        `;
+        
+        styleSheet.innerText = css;
+        document.head.appendChild(styleSheet);
+        
+        document.querySelectorAll('button.bg-blue-600').forEach(el => {
+          el.style.backgroundColor = userSettings.accentColor;
+        });
+      }
+      
+      function addAlpha(color, opacity) {
+        if (color.startsWith('#')) {
+          const r = parseInt(color.slice(1, 3), 16);
+          const g = parseInt(color.slice(3, 5), 16);
+          const b = parseInt(color.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+        return color;
+      }
+      
+      function saveSettings() {
+        try {
+          localStorage.setItem('codecrystal-settings', JSON.stringify(userSettings));
+          setCookie('codecrystal-settings', userSettings, 365);
+        } catch (e) {
+          console.error('Error saving settings:', e);
+        }
+      }
+      
+      function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + JSON.stringify(value) + ";" + expires + ";path=/";
+      }
+      
+      function getCookie(name) {
+        const cookieName = name + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const cookieArray = decodedCookie.split(';');
+        
+        for (let i = 0; i < cookieArray.length; i++) {
+          let cookie = cookieArray[i];
+          while (cookie.charAt(0) === ' ') {
+            cookie = cookie.substring(1);
+          }
+          if (cookie.indexOf(cookieName) === 0) {
+            try {
+              return JSON.parse(cookie.substring(cookieName.length, cookie.length));
+            } catch (e) {
+              return null;
+            }
+          }
+        }
+        return null;
       }
     });
   </script>
