@@ -985,7 +985,16 @@ func main() {
         if (newFileBtn) newFileBtn.addEventListener('click', toggleNewFileDropdown);
         if (openFileBtn) openFileBtn.addEventListener('click', openFile);
         if (saveFileBtn) saveFileBtn.addEventListener('click', saveFile);
-        if (openFolderBtn) openFolderBtn.addEventListener('click', openFolder);
+        if (openFolderBtn) {
+          // Check if folder access is supported and update the button accordingly
+          if ('showDirectoryPicker' in window) {
+            openFolderBtn.addEventListener('click', openFolder);
+            openFolderBtn.title = "Open Folder";
+          } else {
+            openFolderBtn.addEventListener('click', showFolderAccessHelp);
+            openFolderBtn.title = "Folder Access Help";
+          }
+        }
         if (renameFileBtn) renameFileBtn.addEventListener('click', () => renameFile(activeTab));
         if (downloadProjectBtn) downloadProjectBtn.addEventListener('click', downloadProject);
         if (refreshPreviewBtn) refreshPreviewBtn.addEventListener('click', () => updatePreview(true));
@@ -1155,6 +1164,160 @@ func main() {
             openFile();
           }
         });
+      }
+      
+      function showFolderAccessHelp() {
+        // Create a modal dialog that shows alternatives to folder access
+        const helpModal = document.createElement('div');
+        helpModal.className = 'fixed inset-0 flex items-center justify-center z-50';
+        helpModal.innerHTML = `
+          <div class="fixed inset-0 bg-black opacity-50" id="help-backdrop"></div>
+          <div class="bg-gray-800 rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto relative z-10 p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-bold">Folder Access Not Supported</h2>
+              <button id="close-help-btn" class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div class="text-gray-300 space-y-4">
+              <p>Your browser doesn't support direct folder access. Here are some alternatives:</p>
+              
+              <div class="bg-gray-700 p-4 rounded">
+                <h3 class="font-bold mb-2">Option 1: Open multiple files individually</h3>
+                <p>You can open each file separately using the Open File button.</p>
+                <button id="open-file-help-btn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Open File</button>
+              </div>
+              
+              <div class="bg-gray-700 p-4 rounded">
+                <h3 class="font-bold mb-2">Option 2: Download as project when done</h3>
+                <p>Work on your files individually, and when you're finished, download everything as a zip project.</p>
+                <button id="download-help-btn" class="mt-2 px-4 py-2 bg-purple-600 text-white rounded">Download Project</button>
+              </div>
+              
+              <div class="bg-gray-700 p-4 rounded">
+                <h3 class="font-bold mb-2">Option 3: Try a different browser</h3>
+                <p>Folder access is supported in recent versions of Chrome, Edge, and other Chromium-based browsers.</p>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(helpModal);
+        
+        // Add event listeners
+        const closeHelpBtn = helpModal.querySelector('#close-help-btn');
+        const helpBackdrop = helpModal.querySelector('#help-backdrop');
+        const openFileHelpBtn = helpModal.querySelector('#open-file-help-btn');
+        const downloadHelpBtn = helpModal.querySelector('#download-help-btn');
+        
+        closeHelpBtn.addEventListener('click', () => {
+          document.body.removeChild(helpModal);
+        });
+        
+        helpBackdrop.addEventListener('click', () => {
+          document.body.removeChild(helpModal);
+        });
+        
+        openFileHelpBtn.addEventListener('click', () => {
+          document.body.removeChild(helpModal);
+          openFile();
+        });
+        
+        downloadHelpBtn.addEventListener('click', () => {
+          document.body.removeChild(helpModal);
+          downloadProject();
+        });
+      }
+      
+      async function openFolder() {
+        try {
+          if (!('showDirectoryPicker' in window)) {
+            showFolderAccessHelp();
+            return;
+          }
+          
+          const dirHandle = await window.showDirectoryPicker();
+          
+          // Load the first few text files from the folder
+          let fileCount = 0;
+          const maxFiles = 10; // Limit how many files we open initially
+          
+          showToast(`Opening files from folder: ${dirHandle.name}...`);
+          
+          async function* getFiles(dirHandle, path = '') {
+            for await (const entry of dirHandle.values()) {
+              if (entry.kind === 'file') {
+                yield { handle: entry, path: path };
+              } else if (entry.kind === 'directory') {
+                const newPath = path ? `${path}/${entry.name}` : entry.name;
+                yield* getFiles(entry, newPath);
+              }
+            }
+          }
+          
+          for await (const file of getFiles(dirHandle)) {
+            if (fileCount >= maxFiles) break;
+            
+            try {
+              const fileHandle = file.handle;
+              const fileObj = await fileHandle.getFile();
+              
+              // Only open text files
+              const isTextFile = fileObj.name.match(/\.(js|py|html|css|txt|json|rs|go|md)$/i);
+              if (!isTextFile) continue;
+              
+              const contents = await fileObj.text();
+              
+              const fileName = fileObj.name;
+              const extension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '';
+              let language = 'javascript';
+              
+              for (const lang of languages) {
+                if (lang.extensions.includes(extension)) {
+                  language = lang.id;
+                  break;
+                }
+              }
+              
+              const id = Date.now() + fileCount;
+              const tab = {
+                id: id,
+                name: fileObj.name,
+                displayName: fileObj.name,
+                path: file.path,
+                language: language,
+                content: contents,
+                isUnsaved: false,
+                fileHandle: fileHandle
+              };
+              
+              tabs.push(tab);
+              fileCount++;
+            } catch (error) {
+              console.error('Error loading file:', error);
+            }
+          }
+          
+          renderTabs();
+          if (tabs.length > 0) {
+            setActiveTab(tabs[tabs.length - 1].id);
+          }
+          
+          if (fileCount > 0) {
+            showToast(`Opened ${fileCount} files from ${dirHandle.name}`);
+          } else {
+            showToast(`No compatible text files found in ${dirHandle.name}`);
+          }
+          
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            showToast(`Error opening folder: ${err.message}`);
+            console.error('Error opening folder:', err);
+          }
+        }
       }
       
       function toggleNewFileDropdown() {
@@ -1635,7 +1798,47 @@ func main() {
       async function openFile() {
         try {
           if (!('showOpenFilePicker' in window)) {
-            showToast('File system access is not supported in this browser');
+            // Fallback to traditional file input for browsers that don't support File System Access API
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.js,.py,.html,.css,.txt,.json,.rs,.go';
+            
+            input.onchange = async (event) => {
+              if (event.target.files.length > 0) {
+                const file = event.target.files[0];
+                const contents = await file.text();
+                
+                const fileName = file.name;
+                const extension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '';
+                let language = 'javascript';
+                
+                for (const lang of languages) {
+                  if (lang.extensions.includes(extension)) {
+                    language = lang.id;
+                    break;
+                  }
+                }
+                
+                const id = Date.now();
+                const tab = {
+                  id: id,
+                  name: file.name,
+                  displayName: file.name,
+                  language: language,
+                  content: contents,
+                  isUnsaved: false,
+                  fileHandle: null
+                };
+                
+                tabs.push(tab);
+                renderTabs();
+                setActiveTab(id);
+                
+                showToast(`Opened ${file.name}`);
+              }
+            };
+            
+            input.click();
             return;
           }
           
@@ -1656,7 +1859,7 @@ func main() {
           const contents = await file.text();
           
           const fileName = file.name;
-          const extension = fileName.substring(fileName.lastIndexOf('.'));
+          const extension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '';
           let language = 'javascript';
           
           for (const lang of languages) {
@@ -1725,33 +1928,15 @@ func main() {
           await writable.close();
           
           tab.isUnsaved = false;
-        renderTabs();
-        
+          renderTabs();
+          
           showToast(`Saved ${tab.name}`);
         } catch (err) {
           if (err.name !== 'AbortError') {
             showToast(`Error saving file: ${err.message}`);
             console.error('Error saving file:', err);
-          }
-        }
-      }
-      
-      async function openFolder() {
-        try {
-          if (!('showDirectoryPicker' in window)) {
-            showToast('Directory access is not supported in this browser');
-            return;
-          }
-          
-          const dirHandle = await window.showDirectoryPicker();
-          
-          const dirName = dirHandle.name;
-          showToast(`Opened folder: ${dirName}`);
-          
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            showToast(`Error opening folder: ${err.message}`);
-            console.error('Error opening folder:', err);
+            // Fallback to download if save failed
+            downloadFile(tab);
           }
         }
       }
