@@ -986,7 +986,6 @@ func main() {
         if (openFileBtn) openFileBtn.addEventListener('click', openFile);
         if (saveFileBtn) saveFileBtn.addEventListener('click', saveFile);
         if (openFolderBtn) {
-          // Check if folder access is supported and update the button accordingly
           if ('showDirectoryPicker' in window) {
             openFolderBtn.addEventListener('click', openFolder);
             openFolderBtn.title = "Open Folder";
@@ -1167,7 +1166,6 @@ func main() {
       }
       
       function showFolderAccessHelp() {
-        // Create a modal dialog that shows alternatives to folder access
         const helpModal = document.createElement('div');
         helpModal.className = 'fixed inset-0 flex items-center justify-center z-50';
         helpModal.innerHTML = `
@@ -1206,8 +1204,7 @@ func main() {
         `;
         
         document.body.appendChild(helpModal);
-        
-        // Add event listeners
+
         const closeHelpBtn = helpModal.querySelector('#close-help-btn');
         const helpBackdrop = helpModal.querySelector('#help-backdrop');
         const openFileHelpBtn = helpModal.querySelector('#open-file-help-btn');
@@ -1240,10 +1237,9 @@ func main() {
           }
           
           const dirHandle = await window.showDirectoryPicker();
-          
-          // Load the first few text files from the folder
+
           let fileCount = 0;
-          const maxFiles = 10; // Limit how many files we open initially
+          const maxFiles = 10; 
           
           showToast(`Opening files from folder: ${dirHandle.name}...`);
           
@@ -1541,12 +1537,9 @@ func main() {
         
         if (tab.language === 'html') {
           const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-          
-          // For preview, embed CSS content directly instead of linking
-          // (this prevents 404 errors for CSS files that don't exist as real files)
+
           let content = tab.content;
-          
-          // Find all linked CSS files and embed their content
+
           const linkRegex = /<link[^>]*href=["']([^"']+\.css)["'][^>]*>/g;
           let match;
           
@@ -1555,15 +1548,13 @@ func main() {
             const cssTab = tabs.find(t => t.name === cssFileName && t.language === 'css');
             
             if (cssTab) {
-              // Create a style tag with the CSS content
               const styleTag = `<style>/* ${cssFileName} */\n${cssTab.content}\n</style>`;
-              
-              // Replace the link tag with the style tag in the preview (but not in the actual code)
+
               const contentForPreview = content.replace(match[0], styleTag);
               
               if (contentForPreview !== content) {
                 content = contentForPreview;
-                // Reset regex to find other potential link tags
+
                 linkRegex.lastIndex = 0;
               }
             }
@@ -1577,7 +1568,7 @@ func main() {
             if (linkedFiles[htmlTabId] === tab.id) {
               const htmlTab = tabs.find(t => t.id === parseInt(htmlTabId));
               if (htmlTab && htmlTab.language === 'html') {
-                updatePreview(true); // Recursive call to update as if the HTML tab was active
+                updatePreview(true);
                 break;
               }
             }
@@ -1603,10 +1594,10 @@ func main() {
         }
         
         if (isLinked && linkedCssTabId) {
-          // Unlink the CSS file
+
           const cssTab = tabs.find(t => t.id === linkedCssTabId);
           if (cssTab) {
-            // Remove the link tag from HTML content
+
             const linkRegex = new RegExp(`<link[^>]*href=['"]${cssTab.name}['"][^>]*>`, 'g');
             currentTab.content = currentTab.content.replace(linkRegex, '');
             currentTab.isUnsaved = true;
@@ -1646,18 +1637,16 @@ func main() {
       }
       
       function linkCssToHtml(htmlTab, cssTab) {
-        // Check if <head> tag exists
+
         if (!htmlTab.content.includes('<head>')) {
           showToast('HTML file must have a <head> tag to link CSS');
           return;
         }
-        
-        // Create link tag
+
         const linkTag = `<link rel="stylesheet" href="${cssTab.name}">`;
-        
-        // Add link tag to head with proper indentation
+
         if (!htmlTab.content.includes(linkTag)) {
-          // Detect indentation in the HTML file
+
           const headMatch = htmlTab.content.match(/(\s*)<head>/);
           const indent = headMatch && headMatch[1] ? headMatch[1] + '  ' : '    ';
           
@@ -1710,14 +1699,12 @@ func main() {
         
         const oldName = tab.name;
         const oldExtension = oldName.includes('.') ? oldName.substring(oldName.lastIndexOf('.')) : '';
-        
-        // Suggest the name without extension for better user experience
+
         const nameWithoutExt = oldName.includes('.') ? oldName.substring(0, oldName.lastIndexOf('.')) : oldName;
         let newName = prompt('Enter new file name:', nameWithoutExt);
         
         if (!newName || newName === nameWithoutExt) return;
-        
-        // Make sure extension is preserved
+
         if (oldExtension && !newName.endsWith(oldExtension)) {
           newName += oldExtension;
         }
@@ -1725,12 +1712,11 @@ func main() {
         tab.name = newName;
         tab.displayName = newName;
         tab.isUnsaved = true;
-        
-        // If this is a CSS file, update any HTML files that link to it
+
         if (tab.language === 'css') {
           tabs.forEach(htmlTab => {
             if (htmlTab.language === 'html' && htmlTab.content.includes(`href="${oldName}"`)) {
-              // Update the link tag in the HTML content
+
               const regex = new RegExp(`<link[^>]*href=["']${oldName}["'][^>]*>`, 'g');
               const newLinkTag = `<link rel="stylesheet" href="${newName}">`;
               
@@ -1760,8 +1746,7 @@ func main() {
           const confirm = window.confirm(`${tab.name} has unsaved changes. Do you want to close it anyway?`);
           if (!confirm) return;
         }
-        
-        // Handle unlinking if it's a CSS file
+
         if (tab.language === 'css') {
           for (const htmlTabId in linkedFiles) {
             if (linkedFiles[htmlTabId] === tab.id) {
@@ -1769,8 +1754,7 @@ func main() {
             }
           }
         }
-        
-        // If it's an HTML file with linked CSS
+
         if (tab.language === 'html') {
           for (const cssTabId in linkedFiles) {
             if (linkedFiles[cssTabId] === tab.id) {
@@ -1798,7 +1782,7 @@ func main() {
       async function openFile() {
         try {
           if (!('showOpenFilePicker' in window)) {
-            // Fallback to traditional file input for browsers that don't support File System Access API
+
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.js,.py,.html,.css,.txt,.json,.rs,.go';
@@ -1935,7 +1919,7 @@ func main() {
           if (err.name !== 'AbortError') {
             showToast(`Error saving file: ${err.message}`);
             console.error('Error saving file:', err);
-            // Fallback to download if save failed
+
             downloadFile(tab);
           }
         }
