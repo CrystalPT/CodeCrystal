@@ -146,6 +146,13 @@ function initEditor() {
         }
       }
     });
+    
+    // Only create a default file if no files were restored
+    if (!hasRestoredFiles) {
+      const template = getTemplateForLanguage('javascript');
+      codeEditorInstance.setValue(template);
+      createNewTab('javascript');
+    }
   }
   
   codeEditorInstance.setSize("100%", "100%");
