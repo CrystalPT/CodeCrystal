@@ -16,6 +16,7 @@ let userSettings = {
   tabSize: 2,
   lineWrap: false,
   lineNumbers: true,
+  autosave: false,
   syntaxColors: {
     keyword: '#ff9d00',
     string: '#7ec699',
@@ -87,27 +88,65 @@ function initEditor() {
     return;
   }
   
-  codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
-    lineNumbers: true,
-    theme: 'dracula',
-    mode: 'javascript',
-    indentUnit: 2,
-    tabSize: 2,
-    lineWrapping: false,
-    autoCloseBrackets: true,
-    matchBrackets: true,
-    styleActiveLine: true,
-    scrollbarStyle: "simple", // Use the simple scrollbars addon
-    extraKeys: {
-      "Tab": function(cm) {
-        cm.replaceSelection("  ", "end");
-      }
-    }
-  });
+  // Restore saved files if they exist
+  const savedFiles = localStorage.getItem('codecrystal-saved-files');
+  let hasRestoredFiles = false;
   
-  // Create a default template based on the selected language
-  const template = getTemplateForLanguage('javascript');
-  codeEditorInstance.setValue(template);
+  if (savedFiles) {
+    try {
+      const parsedFiles = JSON.parse(savedFiles);
+      tabs = parsedFiles;
+      if (tabs.length > 0) {
+        hasRestoredFiles = true;
+        renderTabs();
+        // Set active tab and ensure content is displayed immediately
+        const firstTab = tabs[0];
+        activeTab = firstTab.id;
+        codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
+          lineNumbers: true,
+          theme: 'dracula',
+          mode: languages.find(l => l.id === firstTab.language)?.mime || 'javascript',
+          indentUnit: 2,
+          tabSize: 2,
+          lineWrapping: false,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          styleActiveLine: true,
+          scrollbarStyle: "simple",
+          value: firstTab.content, // Set initial content
+          extraKeys: {
+            "Tab": function(cm) {
+              cm.replaceSelection("  ", "end");
+            }
+          }
+        });
+        // Clear saved files after restoration
+        localStorage.removeItem('codecrystal-saved-files');
+      }
+    } catch (e) {
+      console.error('Error restoring saved files:', e);
+    }
+  }
+  
+  if (!codeEditorInstance) {
+    codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
+      lineNumbers: true,
+      theme: 'dracula',
+      mode: 'javascript',
+      indentUnit: 2,
+      tabSize: 2,
+      lineWrapping: false,
+      autoCloseBrackets: true,
+      matchBrackets: true,
+      styleActiveLine: true,
+      scrollbarStyle: "simple",
+      extraKeys: {
+        "Tab": function(cm) {
+          cm.replaceSelection("  ", "end");
+        }
+      }
+    });
+  }
   
   codeEditorInstance.setSize("100%", "100%");
   
@@ -157,8 +196,6 @@ function initEditor() {
   });
   
   loadSettings();
-  
-  createNewTab('javascript');
   
   setupEventListeners();
 }
@@ -1011,6 +1048,17 @@ function setupEventListeners() {
       openFile();
     }
   });
+
+  // Add window close event listener
+  window.addEventListener('beforeunload', function(e) {
+    if (userSettings.autosave && tabs.length > 0) {
+      try {
+        localStorage.setItem('codecrystal-saved-files', JSON.stringify(tabs));
+      } catch (e) {
+        console.error('Error saving files:', e);
+      }
+    }
+  });
 }
 
 function loadSettings() {
@@ -1617,6 +1665,7 @@ function loadSettingsToForm() {
   const fontSizeValue = document.getElementById('font-size-value');
   const lineWrapCheckbox = document.getElementById('line-wrap-checkbox');
   const lineNumbersCheckbox = document.getElementById('line-numbers-checkbox');
+  const autosaveCheckbox = document.getElementById('autosave-checkbox');
   
   document.querySelectorAll('.theme-option').forEach(btn => {
     if (btn.dataset.theme === userSettings.theme) {
@@ -1651,6 +1700,10 @@ function loadSettingsToForm() {
     lineNumbersCheckbox.checked = userSettings.lineNumbers;
   }
   
+  if (autosaveCheckbox) {
+    autosaveCheckbox.checked = userSettings.autosave;
+  }
+  
   document.querySelectorAll('.syntax-color-picker').forEach(picker => {
     const element = picker.dataset.element;
     if (userSettings.syntaxColors[element]) {
@@ -1664,6 +1717,7 @@ function saveSettingsFromForm() {
   const fontSizeSlider = document.getElementById('font-size-slider');
   const lineWrapCheckbox = document.getElementById('line-wrap-checkbox');
   const lineNumbersCheckbox = document.getElementById('line-numbers-checkbox');
+  const autosaveCheckbox = document.getElementById('autosave-checkbox');
   
   let selectedTheme = userSettings.theme;
   document.querySelectorAll('.theme-option').forEach(btn => {
@@ -1685,6 +1739,7 @@ function saveSettingsFromForm() {
   userSettings.tabSize = selectedTabSize;
   userSettings.lineWrap = lineWrapCheckbox ? lineWrapCheckbox.checked : userSettings.lineWrap;
   userSettings.lineNumbers = lineNumbersCheckbox ? lineNumbersCheckbox.checked : userSettings.lineNumbers;
+  userSettings.autosave = autosaveCheckbox ? autosaveCheckbox.checked : false;
   
   document.querySelectorAll('.syntax-color-picker').forEach(picker => {
     const element = picker.dataset.element;
