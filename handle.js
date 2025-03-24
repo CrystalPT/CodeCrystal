@@ -7,6 +7,7 @@ let linkedFiles = {};
 let pyodideInstance = null;
 let pyodideLoading = false;
 let codeEditorInstance = null;
+let shareBtn;
 
 let userSettings = {
   theme: 'dark',
@@ -72,10 +73,18 @@ document.addEventListener('DOMContentLoaded', function() {
   refreshPreviewBtn = document.getElementById('refresh-preview-btn');
   themeToggleBtn = document.getElementById('theme-toggle-btn');
   editorArea = document.getElementById('editor-area');
+  shareBtn = document.getElementById('share-btn');
   
   window.writeToTerminalFromPython = function(text) {
     writeToTerminal(text);
   };
+
+  // Check if there's a shared workspace in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const sharedData = urlParams.get('share');
+  if (sharedData) {
+    loadSharedWorkspace(sharedData);
+  }
 
   initEditor();
 });
@@ -943,6 +952,7 @@ function setupEventListeners() {
   if (runCodeBtn) runCodeBtn.addEventListener('click', runCode);
   if (runCodeSidebarBtn) runCodeSidebarBtn.addEventListener('click', runCode);
   if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
+  if (shareBtn) shareBtn.addEventListener('click', shareWorkspace);
   
   const settingsBtn = document.getElementById('settings-btn');
   const settingsModal = document.getElementById('settings-modal');
@@ -1820,4 +1830,147 @@ function saveSettingsFromForm() {
   });
   
   saveSettings();
+}
+
+async function shareWorkspace() {
+  if (tabs.length === 0) {
+    showToast('No files to share');
+    return;
+  }
+
+  try {
+    // Create a simplified version of the workspace
+    const workspaceData = tabs.map(tab => ({
+      name: tab.name,
+      language: tab.language,
+      content: tab.content
+    }));
+
+    // Convert to JSON and compress
+    const jsonString = JSON.stringify(workspaceData);
+    const compressedData = await compressData(jsonString);
+    
+    // Create the share URL
+    const baseUrl = 'https://codecrystal.vercel.app/';
+    const shareUrl = `${baseUrl}?share=${compressedData}`;
+    
+    // Copy to clipboard
+    await navigator.clipboard.writeText(shareUrl);
+    showToast('Share link copied to clipboard!');
+    
+  } catch (err) {
+    showToast('Error creating share link');
+    console.error('Error sharing workspace:', err);
+  }
+}
+
+async function compressData(str) {
+  // Convert string to Uint8Array
+  const strBytes = new TextEncoder().encode(str);
+  
+  // Compress the bytes
+  const compressed = await gzip(strBytes);
+  
+  // Convert to base64 and make URL safe
+  return btoa(String.fromCharCode.apply(null, compressed))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+async function decompressData(compressed) {
+  try {
+    // Convert from URL-safe base64
+    const base64 = compressed
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    
+    // Convert base64 to bytes
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    
+    // Decompress
+    const decompressed = await ungzip(bytes);
+    
+    // Convert back to string
+    return new TextDecoder().decode(decompressed);
+  } catch (err) {
+    console.error('Error decompressing data:', err);
+    throw new Error('Invalid share link');
+  }
+}
+
+async function loadSharedWorkspace(compressedData) {
+  try {
+    showToast('Loading shared workspace...');
+    
+    // Decompress the data
+    const jsonString = await decompressData(compressedData);
+    const workspaceData = JSON.parse(jsonString);
+    
+    // Clear existing tabs
+    tabs = [];
+    
+    // Create tabs from the shared data
+    workspaceData.forEach(file => {
+      const id = Date.now() + Math.random();
+      const tab = {
+        id: id,
+        name: file.name,
+        displayName: file.name,
+        language: file.language,
+        content: file.content,
+        isUnsaved: false,
+        fileHandle: null
+      };
+      tabs.push(tab);
+    });
+    
+    // Render the tabs and set the first one active
+    renderTabs();
+    if (tabs.length > 0) {
+      setActiveTab(tabs[0].id);
+    }
+    
+    showToast('Shared workspace loaded successfully!');
+    
+  } catch (err) {
+    showToast('Error loading shared workspace');
+    console.error('Error loading shared workspace:', err);
+  }
+}
+
+// Add gzip compression function
+async function gzip(input) {
+  const cs = new CompressionStream('gzip');
+  const writer = cs.writable.getWriter();
+  writer.write(input);
+  writer.close();
+  const output = [];
+  const reader = cs.readable.getReader();
+  
+  while (true) {
+    const {value, done} = await reader.read();
+    if (done) break;
+    output.push(...value);
+  }
+  
+  return new Uint8Array(output);
+}
+
+// Add ungzip decompression function
+async function ungzip(input) {
+  const ds = new DecompressionStream('gzip');
+  const writer = ds.writable.getWriter();
+  writer.write(input);
+  writer.close();
+  const output = [];
+  const reader = ds.readable.getReader();
+  
+  while (true) {
+    const {value, done} = await reader.read();
+    if (done) break;
+    output.push(...value);
+  }
+  
+  return new Uint8Array(output);
 }
