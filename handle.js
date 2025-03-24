@@ -102,17 +102,19 @@ function initEditor() {
           lineNumbers: true,
           theme: 'dracula',
           mode: languages.find(l => l.id === firstTab.language)?.mime || 'javascript',
-          indentUnit: 2,
-          tabSize: 2,
+          indentUnit: userSettings.tabSize,
+          tabSize: userSettings.tabSize,
           lineWrapping: false,
           autoCloseBrackets: true,
           matchBrackets: true,
           styleActiveLine: true,
           scrollbarStyle: "simple",
           value: firstTab.content,
+          indentWithTabs: false,
           extraKeys: {
             "Tab": function(cm) {
-              cm.replaceSelection("  ", "end");
+              const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+              cm.replaceSelection(spaces);
             }
           }
         });
@@ -128,16 +130,18 @@ function initEditor() {
       lineNumbers: true,
       theme: 'dracula',
       mode: 'javascript',
-      indentUnit: 2,
-      tabSize: 2,
+      indentUnit: userSettings.tabSize,
+      tabSize: userSettings.tabSize,
       lineWrapping: false,
       autoCloseBrackets: true,
       matchBrackets: true,
       styleActiveLine: true,
       scrollbarStyle: "simple",
+      indentWithTabs: false,
       extraKeys: {
         "Tab": function(cm) {
-          cm.replaceSelection("  ", "end");
+          const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+          cm.replaceSelection(spaces);
         }
       }
     });
@@ -960,9 +964,15 @@ function setupEventListeners() {
   document.querySelectorAll('.tab-size-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.tab-size-btn').forEach(b => {
-        b.classList.remove('bg-blue-600');
+        b.classList.remove('bg-purple-600');
+        b.classList.add('bg-gray-700');
       });
-      btn.classList.add('bg-blue-600');
+      btn.classList.remove('bg-gray-700');
+      btn.classList.add('bg-purple-600');
+      const newSize = parseInt(btn.dataset.size);
+      userSettings.tabSize = newSize;
+      saveSettings();
+      applySettings();
     });
   });
   
@@ -1089,12 +1099,23 @@ function loadSettings() {
 function applySettings() {
   if (!codeEditorInstance) return;
   
+  const newTabSize = userSettings.tabSize;
   codeEditorInstance.setOption('lineWrapping', userSettings.lineWrap);
   codeEditorInstance.setOption('lineNumbers', userSettings.lineNumbers);
-  codeEditorInstance.setOption('tabSize', userSettings.tabSize);
-  codeEditorInstance.setOption('indentUnit', userSettings.tabSize);
+  codeEditorInstance.setOption('tabSize', newTabSize);
+  codeEditorInstance.setOption('indentUnit', newTabSize);
+  codeEditorInstance.setOption('indentWithTabs', false);
+  codeEditorInstance.setOption('extraKeys', {
+    "Tab": function(cm) {
+      const spaces = Array(newTabSize + 1).join(" ");
+      cm.replaceSelection(spaces);
+    }
+  });
   
-  document.querySelector('.CodeMirror').style.fontSize = `${userSettings.fontSize}px`;
+  const editorElement = document.querySelector('.CodeMirror');
+  if (editorElement) {
+    editorElement.style.fontSize = `${userSettings.fontSize}px`;
+  }
   
   let themeClass = 'dark';
   switch(userSettings.theme) {
@@ -1674,6 +1695,16 @@ function loadSettingsToForm() {
     }
   });
   
+  document.querySelectorAll('.tab-size-btn').forEach(btn => {
+    if (parseInt(btn.dataset.size) === userSettings.tabSize) {
+      btn.classList.remove('bg-gray-700');
+      btn.classList.add('bg-purple-600');
+    } else {
+      btn.classList.remove('bg-purple-600');
+      btn.classList.add('bg-gray-700');
+    }
+  });
+  
   if (accentColorPicker) {
     accentColorPicker.value = userSettings.accentColor;
   }
@@ -1682,14 +1713,6 @@ function loadSettingsToForm() {
     fontSizeSlider.value = userSettings.fontSize;
     fontSizeValue.textContent = `${userSettings.fontSize}px`;
   }
-  
-  document.querySelectorAll('.tab-size-btn').forEach(btn => {
-    if (parseInt(btn.dataset.size) === userSettings.tabSize) {
-      btn.classList.add('bg-blue-600');
-    } else {
-      btn.classList.remove('bg-blue-600');
-    }
-  });
   
   if (lineWrapCheckbox) {
     lineWrapCheckbox.checked = userSettings.lineWrap;
@@ -1725,9 +1748,9 @@ function saveSettingsFromForm() {
     }
   });
   
-  let selectedTabSize = userSettings.tabSize;
+  let selectedTabSize = 2; // Default to 2 if none selected
   document.querySelectorAll('.tab-size-btn').forEach(btn => {
-    if (btn.classList.contains('bg-blue-600')) {
+    if (btn.classList.contains('bg-purple-600')) {
       selectedTabSize = parseInt(btn.dataset.size);
     }
   });
