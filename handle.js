@@ -1,4 +1,3 @@
-// Global variables
 let tabs = [];
 let activeTab = null;
 let showPreview = false;
@@ -43,7 +42,6 @@ let tabsContainer, languageSelector, previewPanel, previewIframe, previewToggleB
     languageOptions, openFileBtn, saveFileBtn, openFolderBtn, renameFileBtn,
     downloadProjectBtn, refreshPreviewBtn, themeToggleBtn, editorArea;
 
-// Initialize DOM references when document is loaded
 document.addEventListener('DOMContentLoaded', function() {
   tabsContainer = document.getElementById('tabs-container');
   languageSelector = document.getElementById('language-selector');
@@ -88,7 +86,6 @@ function initEditor() {
     return;
   }
   
-  // Restore saved files if they exist
   const savedFiles = localStorage.getItem('codecrystal-saved-files');
   let hasRestoredFiles = false;
   
@@ -99,7 +96,6 @@ function initEditor() {
       if (tabs.length > 0) {
         hasRestoredFiles = true;
         renderTabs();
-        // Set active tab and ensure content is displayed immediately
         const firstTab = tabs[0];
         activeTab = firstTab.id;
         codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
@@ -113,14 +109,13 @@ function initEditor() {
           matchBrackets: true,
           styleActiveLine: true,
           scrollbarStyle: "simple",
-          value: firstTab.content, // Set initial content
+          value: firstTab.content,
           extraKeys: {
             "Tab": function(cm) {
               cm.replaceSelection("  ", "end");
             }
           }
         });
-        // Clear saved files after restoration
         localStorage.removeItem('codecrystal-saved-files');
       }
     } catch (e) {
@@ -147,7 +142,6 @@ function initEditor() {
       }
     });
     
-    // Only create a default file if no files were restored
     if (!hasRestoredFiles) {
       const template = getTemplateForLanguage('javascript');
       codeEditorInstance.setValue(template);
@@ -157,10 +151,8 @@ function initEditor() {
   
   codeEditorInstance.setSize("100%", "100%");
   
-  // Force redraw and recalculate scrollbar dimensions
   setTimeout(() => {
     codeEditorInstance.refresh();
-    // Only show scrollbars when needed (auto)
     const scrollElement = document.querySelector('.CodeMirror-scroll');
     if (scrollElement) {
       scrollElement.style.overflow = 'auto';
