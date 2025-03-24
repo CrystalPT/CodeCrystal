@@ -88,6 +88,80 @@ function initEditor() {
   
   const savedFiles = localStorage.getItem('codecrystal-saved-files');
   let hasRestoredFiles = false;
+
+  const getIndentation = (cm, line) => {
+    const lineContent = cm.getLine(line);
+    const match = lineContent.match(/^\s*/);
+    return match ? match[0] : '';
+  };
+
+  const handleHtmlCompletion = (cm) => {
+    const cursor = cm.getCursor();
+    const line = cursor.line;
+    const content = cm.getLine(line);
+    const cursorPos = cursor.ch;
+
+    // Check if we just typed '>'
+    if (content[cursorPos - 1] === '>') {
+      const beforeCursor = content.slice(0, cursorPos);
+      const tagMatch = beforeCursor.match(/<(\w+)([^>]*)>$/);
+      
+      if (tagMatch) {
+        const [fullMatch, tagName, attributes] = tagMatch;
+        
+        // Skip self-closing tags
+        const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
+        if (selfClosingTags.includes(tagName.toLowerCase())) {
+          return;
+        }
+
+        // Define inline elements that should stay on the same line
+        const inlineElements = ['a', 'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'button', 'span', 'strong', 'em', 'label', 'i', 'b', 'small', 'code', 'time', 'mark'];
+        
+        if (inlineElements.includes(tagName.toLowerCase())) {
+          // For inline elements, add closing tag on same line and place cursor between tags
+          const closingTag = `</${tagName}>`;
+          cm.replaceRange(closingTag, cursor);
+          cm.setCursor({
+            line: line,
+            ch: cursorPos
+          });
+        } else {
+          // For block elements, add closing tag on new line with proper indentation
+          const currentIndent = getIndentation(cm, line);
+          const extraIndent = ' '.repeat(userSettings.tabSize);
+          
+          const closingTag = `\n${currentIndent}${extraIndent}\n${currentIndent}</${tagName}>`;
+          cm.replaceRange(closingTag, cursor);
+          
+          cm.setCursor({
+            line: line + 1,
+            ch: currentIndent.length + extraIndent.length
+          });
+        }
+      }
+    }
+  };
+
+  const editorConfig = {
+    lineNumbers: true,
+    theme: 'dracula',
+    mode: 'javascript',
+    indentUnit: userSettings.tabSize,
+    tabSize: userSettings.tabSize,
+    lineWrapping: false,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    styleActiveLine: true,
+    scrollbarStyle: "simple",
+    indentWithTabs: false,
+    extraKeys: {
+      "Tab": function(cm) {
+        const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+        cm.replaceSelection(spaces);
+      }
+    }
+  };
   
   if (savedFiles) {
     try {
@@ -99,24 +173,9 @@ function initEditor() {
         const firstTab = tabs[0];
         activeTab = firstTab.id;
         codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
-          lineNumbers: true,
-          theme: 'dracula',
+          ...editorConfig,
           mode: languages.find(l => l.id === firstTab.language)?.mime || 'javascript',
-          indentUnit: userSettings.tabSize,
-          tabSize: userSettings.tabSize,
-          lineWrapping: false,
-          autoCloseBrackets: true,
-          matchBrackets: true,
-          styleActiveLine: true,
-          scrollbarStyle: "simple",
-          value: firstTab.content,
-          indentWithTabs: false,
-          extraKeys: {
-            "Tab": function(cm) {
-              const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
-              cm.replaceSelection(spaces);
-            }
-          }
+          value: firstTab.content
         });
         localStorage.removeItem('codecrystal-saved-files');
       }
@@ -126,25 +185,7 @@ function initEditor() {
   }
   
   if (!codeEditorInstance) {
-    codeEditorInstance = CodeMirror(document.getElementById('code-editor'), {
-      lineNumbers: true,
-      theme: 'dracula',
-      mode: 'javascript',
-      indentUnit: userSettings.tabSize,
-      tabSize: userSettings.tabSize,
-      lineWrapping: false,
-      autoCloseBrackets: true,
-      matchBrackets: true,
-      styleActiveLine: true,
-      scrollbarStyle: "simple",
-      indentWithTabs: false,
-      extraKeys: {
-        "Tab": function(cm) {
-          const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
-          cm.replaceSelection(spaces);
-        }
-      }
-    });
+    codeEditorInstance = CodeMirror(document.getElementById('code-editor'), editorConfig);
     
     if (!hasRestoredFiles) {
       const template = getTemplateForLanguage('javascript');
@@ -152,6 +193,16 @@ function initEditor() {
       createNewTab('javascript');
     }
   }
+
+  // Add HTML completion handler
+  codeEditorInstance.on('inputRead', (cm, change) => {
+    if (change.text.includes('>')) {
+      const tab = tabs.find(t => t.id === activeTab);
+      if (tab && tab.language === 'html') {
+        handleHtmlCompletion(cm);
+      }
+    }
+  });
   
   codeEditorInstance.setSize("100%", "100%");
   
