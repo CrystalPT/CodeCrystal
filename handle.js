@@ -8,6 +8,10 @@ let pyodideInstance = null;
 let pyodideLoading = false;
 let codeEditorInstance = null;
 let shareBtn;
+let fileSizeIndicator, charCountIndicator, lastModifiedIndicator;
+let searchPanel, searchInput, replaceInput, prevMatchBtn, nextMatchBtn, closeSearchBtn, replaceBtn, replaceAllBtn;
+let currentSearchMarkers = [];
+let currentSearchIndex = -1;
 
 let userSettings = {
   theme: 'dark',
@@ -74,6 +78,17 @@ document.addEventListener('DOMContentLoaded', function() {
   themeToggleBtn = document.getElementById('theme-toggle-btn');
   editorArea = document.getElementById('editor-area');
   shareBtn = document.getElementById('share-btn');
+  fileSizeIndicator = document.getElementById('file-size');
+  charCountIndicator = document.getElementById('char-count');
+  lastModifiedIndicator = document.getElementById('last-modified');
+  searchPanel = document.getElementById('search-panel');
+  searchInput = document.getElementById('search-input');
+  replaceInput = document.getElementById('replace-input');
+  prevMatchBtn = document.getElementById('prev-match-btn');
+  nextMatchBtn = document.getElementById('next-match-btn');
+  closeSearchBtn = document.getElementById('close-search-btn');
+  replaceBtn = document.getElementById('replace-btn');
+  replaceAllBtn = document.getElementById('replace-all-btn');
   
   window.writeToTerminalFromPython = function(text) {
     writeToTerminal(text);
@@ -164,6 +179,7 @@ function initEditor() {
     styleActiveLine: true,
     scrollbarStyle: "simple",
     indentWithTabs: false,
+    viewportMargin: Infinity,
     extraKeys: {
       "Tab": function(cm) {
         const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
@@ -215,14 +231,27 @@ function initEditor() {
   
   codeEditorInstance.setSize("100%", "100%");
   
-  setTimeout(() => {
+  // Ensure proper viewport rendering
+  const refreshEditor = () => {
     codeEditorInstance.refresh();
     const scrollElement = document.querySelector('.CodeMirror-scroll');
     if (scrollElement) {
       scrollElement.style.overflow = 'auto';
     }
-  }, 300);
-  
+  };
+
+  // Initial refresh
+  setTimeout(refreshEditor, 300);
+
+  // Add refresh on window resize
+  window.addEventListener('resize', refreshEditor);
+
+  // Add refresh on tab changes
+  const resizeObserver = new ResizeObserver(() => {
+    refreshEditor();
+  });
+  resizeObserver.observe(document.getElementById('code-editor'));
+
   codeEditorInstance.on("cursorActivity", function() {
     const cursor = codeEditorInstance.getCursor();
     if (cursorPosition) {
@@ -569,6 +598,8 @@ function handleEditorInput() {
   if (showPreview && (tab.language === 'html' || tab.language === 'css')) {
     updatePreview();
   }
+
+  updateStatusIndicators();
 }
 
 function setActiveTab(id) {
@@ -588,6 +619,7 @@ function setActiveTab(id) {
   
   updateLanguageUI(tab.language);
   renderTabs();
+  updateStatusIndicators();
   
   if (tab.language === 'html' && linkCssContainer) {
     linkCssContainer.classList.remove('hidden');
@@ -1117,7 +1149,36 @@ function setupEventListeners() {
       e.preventDefault();
       openFile();
     }
+
+    if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      toggleSearch();
+    }
+
+    if (e.key === 'h' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      toggleSearch(true);
+    }
   });
+
+  if (searchPanel) {
+    searchInput.addEventListener('input', performSearch);
+    prevMatchBtn.addEventListener('click', () => findNext(true));
+    nextMatchBtn.addEventListener('click', () => findNext(false));
+    closeSearchBtn.addEventListener('click', closeSearch);
+    replaceBtn.addEventListener('click', replaceSelection);
+    replaceAllBtn.addEventListener('click', replaceAll);
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        findNext(e.shiftKey);
+      }
+      if (e.key === 'Escape') {
+        closeSearch();
+      }
+    });
+  }
 
   // Add window close event listener
   window.addEventListener('beforeunload', function(e) {
@@ -1961,8 +2022,7 @@ async function loadSharedWorkspace(compressedData) {
       };
       tabs.push(tab);
     });
-    
-    // Render the tabs and set the first one active
+
     renderTabs();
     if (tabs.length > 0) {
       setActiveTab(tabs[0].id);
@@ -2009,3 +2069,207 @@ async function ungzip(input) {
   
   return new Uint8Array(output);
 }
+
+function updateStatusIndicators() {
+  const tab = tabs.find(t => t.id === activeTab);
+  if (!tab) return;
+
+  // Update character count
+  const charCount = tab.content.length;
+  charCountIndicator.textContent = `Chars: ${charCount.toLocaleString()}`;
+
+  // Update file size
+  const bytes = new Blob([tab.content]).size;
+  let sizeText = '';
+  if (bytes < 1024) {
+    sizeText = `${bytes} B`;
+  } else if (bytes < 1024 * 1024) {
+    sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+  } else {
+    sizeText = `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  fileSizeIndicator.textContent = `Size: ${sizeText}`;
+
+  // Update last modified
+  const now = new Date();
+  tab.lastModified = now;
+  const timeAgo = getTimeAgo(now);
+  lastModifiedIndicator.textContent = `Last modified: ${timeAgo}`;
+}
+
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  if (seconds < 60) {
+    return 'Just now';
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m ago`;
+  } else if (seconds < 86400) {
+    const hours = Math.floor(seconds / 3600);
+    return `${hours}h ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+}
+
+function toggleSearch(showReplace = false) {
+  if (!searchPanel || !codeEditorInstance) return;
+
+  const isHidden = searchPanel.classList.contains('hidden');
+  
+  if (isHidden) {
+    searchPanel.classList.remove('hidden');
+    const selectedText = codeEditorInstance.getSelection();
+    if (selectedText) {
+      searchInput.value = selectedText;
+      performSearch();
+    }
+    searchInput.focus();
+    document.getElementById('replace-container').style.display = showReplace ? 'flex' : 'none';
+  } else {
+    closeSearch();
+  }
+}
+
+function closeSearch() {
+  if (!searchPanel) return;
+  
+  searchPanel.classList.add('hidden');
+  clearSearch();
+  codeEditorInstance.focus();
+}
+
+function clearSearch() {
+  if (!codeEditorInstance) return;
+  
+  currentSearchMarkers.forEach(marker => marker.clear());
+  currentSearchMarkers = [];
+  currentSearchIndex = -1;
+}
+
+function performSearch() {
+  clearSearch();
+  
+  const searchTerm = searchInput.value;
+  if (!searchTerm) return;
+  
+  let cursor = codeEditorInstance.getSearchCursor(searchTerm, null, {caseFold: false});
+  let found = false;
+  
+  while (cursor.findNext()) {
+    found = true;
+    const from = cursor.from();
+    const to = cursor.to();
+    const marker = codeEditorInstance.markText(from, to, {
+      className: 'search-highlight'
+    });
+    currentSearchMarkers.push(marker);
+  }
+  
+  if (found) {
+    currentSearchIndex = 0;
+    findNext(false);
+  }
+}
+
+function findNext(backwards = false) {
+  if (currentSearchMarkers.length === 0) return;
+  
+  // Clear active highlight from current marker
+  if (currentSearchIndex >= 0) {
+    const currentMarker = currentSearchMarkers[currentSearchIndex];
+    const currentPos = currentMarker.find();
+    if (currentPos) {
+      currentMarker.clear();
+      currentSearchMarkers[currentSearchIndex] = codeEditorInstance.markText(currentPos.from, currentPos.to, {
+        className: 'search-highlight'
+      });
+    }
+  }
+  
+  if (backwards) {
+    currentSearchIndex--;
+    if (currentSearchIndex < 0) {
+      currentSearchIndex = currentSearchMarkers.length - 1;
+    }
+  } else {
+    currentSearchIndex++;
+    if (currentSearchIndex >= currentSearchMarkers.length) {
+      currentSearchIndex = 0;
+    }
+  }
+  
+  const marker = currentSearchMarkers[currentSearchIndex];
+  const pos = marker.find();
+  if (pos) {
+    // Set active highlight for current marker
+    marker.clear();
+    currentSearchMarkers[currentSearchIndex] = codeEditorInstance.markText(pos.from, pos.to, {
+      className: 'search-highlight active'
+    });
+    
+    // Set cursor and selection
+    codeEditorInstance.setCursor(pos.from);
+    codeEditorInstance.setSelection(pos.from, pos.to);
+    
+    // Ensure the match is visible
+    codeEditorInstance.scrollIntoView(pos.from, 20);
+  }
+}
+
+function replaceSelection() {
+  if (!codeEditorInstance || currentSearchMarkers.length === 0) return;
+  
+  const replaceText = replaceInput.value;
+  const marker = currentSearchMarkers[currentSearchIndex];
+  const pos = marker.find();
+  
+  if (pos) {
+    codeEditorInstance.replaceRange(replaceText, pos.from, pos.to);
+    
+    // Clear the current marker
+    marker.clear();
+    currentSearchMarkers.splice(currentSearchIndex, 1);
+    
+    // If we have more markers, move to the next one
+    if (currentSearchMarkers.length > 0) {
+      if (currentSearchIndex >= currentSearchMarkers.length) {
+        currentSearchIndex = currentSearchMarkers.length - 1;
+      }
+      findNext(false);
+    } else {
+      // If no more markers, perform a new search
+      performSearch();
+    }
+  }
+}
+
+function replaceAll() {
+  if (!codeEditorInstance || !searchInput.value) return;
+  
+  const searchTerm = searchInput.value;
+  const replaceText = replaceInput.value;
+  const content = codeEditorInstance.getValue();
+  
+  const newContent = content.replace(new RegExp(escapeRegExp(searchTerm), 'g'), replaceText);
+  codeEditorInstance.setValue(newContent);
+  handleEditorInput();
+  closeSearch();
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Add this CSS to style.css
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  .search-highlight {
+    background-color: rgba(255, 255, 0, 0.3);
+  }
+  .search-highlight.active {
+    background-color: rgba(255, 165, 0, 0.5);
+  }
+`;
+document.head.appendChild(styleSheet);
