@@ -1525,8 +1525,9 @@ function linkCssFile() {
   let isLinked = false;
   let linkedCssTabId = null;
   
-  for (const cssTabId in linkedFiles) {
-    if (linkedFiles[cssTabId] === currentTab.id) {
+  // Look for HTML tab ID in the values of linkedFiles
+  for (const [cssTabId, htmlTabId] of Object.entries(linkedFiles)) {
+    if (parseInt(htmlTabId) === currentTab.id) {
       isLinked = true;
       linkedCssTabId = parseInt(cssTabId);
       break;
@@ -1545,9 +1546,12 @@ function linkCssFile() {
       }
       
       delete linkedFiles[linkedCssTabId];
-      updateLinkedCssInfo();
+      linkCssBtn.textContent = 'Link CSS File';
+      linkedCssInfo.classList.add('hidden');
       showToast('CSS file unlinked');
+      updateLinkedCssInfo(); // Add this line to ensure UI is updated
       renderTabs();
+      updatePreview(true);
     }
   } else {
     const cssFiles = tabs.filter(t => t.language === 'css');
@@ -1595,22 +1599,24 @@ function linkCssToHtml(htmlTab, cssTab) {
   }
   
   linkedFiles[cssTab.id] = htmlTab.id;
-  updateLinkedCssInfo();
+  
   showToast(`Linked to ${cssTab.name}`);
-  updatePreview(true);
   renderTabs();
+  updatePreview(true);
+  updateLinkedCssInfo(); // Moved to the end to ensure it's the last operation
 }
 
 function updateLinkedCssInfo() {
-  if (!linkedCssInfo) return;
+  if (!linkedCssInfo || !linkCssBtn) return;
   
   const currentTab = tabs.find(t => t.id === activeTab);
   if (!currentTab || currentTab.language !== 'html') return;
   
   let linkedCssName = null;
   
-  for (const cssTabId in linkedFiles) {
-    if (linkedFiles[cssTabId] === currentTab.id) {
+  // Look for HTML tab ID in the values of linkedFiles
+  for (const [cssTabId, htmlTabId] of Object.entries(linkedFiles)) {
+    if (parseInt(htmlTabId) === currentTab.id) {
       const cssTab = tabs.find(t => t.id === parseInt(cssTabId));
       if (cssTab) {
         linkedCssName = cssTab.name;
