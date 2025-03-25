@@ -23,6 +23,13 @@
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
   
+  <!-- Add CodeMirror search addon -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/jump-to-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.css"></link>
+  
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   
   <script defer src="/_vercel/insights/script.js"></script>
@@ -158,6 +165,35 @@
         
         <div id="editor-preview-container" class="flex-1 flex overflow-hidden">
           <div id="editor-area" class="relative w-full">
+            <div id="search-panel" class="absolute top-0 right-0 bg-gray-800 border border-gray-700 rounded-bl shadow-lg p-2 hidden z-10">
+              <div class="flex items-center space-x-2 mb-2">
+                <input type="text" id="search-input" placeholder="Find..." class="px-2 py-1 bg-gray-700 text-white rounded text-sm w-48">
+                <button id="prev-match-btn" class="p-1 rounded hover:bg-gray-600" title="Previous Match (Shift+Enter)">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <button id="next-match-btn" class="p-1 rounded hover:bg-gray-600" title="Next Match (Enter)">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+                <button id="close-search-btn" class="p-1 rounded hover:bg-gray-600" title="Close (Esc)">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="replace-container" class="flex items-center space-x-2">
+                <input type="text" id="replace-input" placeholder="Replace with..." class="px-2 py-1 bg-gray-700 text-white rounded text-sm w-48">
+                <button id="replace-btn" class="p-1 rounded hover:bg-gray-600 text-sm" title="Replace">
+                  Replace
+                </button>
+                <button id="replace-all-btn" class="p-1 rounded hover:bg-gray-600 text-sm" title="Replace All">
+                  All
+                </button>
+              </div>
+            </div>
             <div id="code-editor"></div>
           </div>
           
@@ -198,9 +234,13 @@
     </div>
     
     <div class="flex justify-between items-center px-4 py-1 text-sm bg-gray-800 text-gray-400">
-      <div>
+      <div class="flex items-center space-x-4">
         <span id="cursor-position" class="mr-4">Line: 1, Col: 1</span>
         <span>Spaces: 2</span>
+        <div class="border-l border-gray-600 h-4 mx-2"></div>
+        <span id="file-size">Size: 0 B</span>
+        <span id="char-count">Chars: 0</span>
+        <span id="last-modified">Last modified: Never</span>
       </div>
       <div>
         <span id="language-indicator" class="px-2 py-1 rounded"></span>
