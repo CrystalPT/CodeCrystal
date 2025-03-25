@@ -1809,7 +1809,7 @@ function saveSettingsFromForm() {
     }
   });
   
-  let selectedTabSize = 2; // Default to 2 if none selected
+  let selectedTabSize = 2;
   document.querySelectorAll('.tab-size-btn').forEach(btn => {
     if (btn.classList.contains('bg-purple-600')) {
       selectedTabSize = parseInt(btn.dataset.size);
@@ -1839,22 +1839,19 @@ async function shareWorkspace() {
   }
 
   try {
-    // Create a simplified version of the workspace
+
     const workspaceData = tabs.map(tab => ({
       name: tab.name,
       language: tab.language,
       content: tab.content
     }));
 
-    // Convert to JSON and compress
     const jsonString = JSON.stringify(workspaceData);
     const compressedData = await compressData(jsonString);
-    
-    // Create the share URL
+
     const baseUrl = 'https://codecrystal.vercel.app/';
     const shareUrl = `${baseUrl}?share=${compressedData}`;
-    
-    // Copy to clipboard
+
     await navigator.clipboard.writeText(shareUrl);
     showToast('Share link copied to clipboard!');
     
@@ -1865,13 +1862,11 @@ async function shareWorkspace() {
 }
 
 async function compressData(str) {
-  // Convert string to Uint8Array
+
   const strBytes = new TextEncoder().encode(str);
-  
-  // Compress the bytes
+
   const compressed = await gzip(strBytes);
-  
-  // Convert to base64 and make URL safe
+
   return btoa(String.fromCharCode.apply(null, compressed))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -1880,18 +1875,15 @@ async function compressData(str) {
 
 async function decompressData(compressed) {
   try {
-    // Convert from URL-safe base64
+
     const base64 = compressed
       .replace(/-/g, '+')
       .replace(/_/g, '/');
-    
-    // Convert base64 to bytes
+
     const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-    
-    // Decompress
+
     const decompressed = await ungzip(bytes);
-    
-    // Convert back to string
+
     return new TextDecoder().decode(decompressed);
   } catch (err) {
     console.error('Error decompressing data:', err);
@@ -1902,15 +1894,60 @@ async function decompressData(compressed) {
 async function loadSharedWorkspace(compressedData) {
   try {
     showToast('Loading shared workspace...');
-    
-    // Decompress the data
+
     const jsonString = await decompressData(compressedData);
     const workspaceData = JSON.parse(jsonString);
+    const hasUnsavedChanges = tabs.some(tab => tab.isUnsaved);
     
-    // Clear existing tabs
+    if (tabs.length > 0) {
+      let shouldProceed = true;
+      
+      if (hasUnsavedChanges) {
+        shouldProceed = confirm('You have unsaved changes in your current workspace. Do you want to load the shared workspace and discard your changes?');
+      } else {
+        shouldProceed = confirm('Do you want to replace your current workspace with the shared one?');
+      }
+      
+      if (!shouldProceed) {
+        const shouldMerge = confirm('Would you like to add the shared files to your existing workspace instead?');
+        
+        if (shouldMerge) {
+          workspaceData.forEach(file => {
+            let fileName = file.name;
+            let counter = 1;
+            while (tabs.some(tab => tab.name === fileName)) {
+              const ext = fileName.lastIndexOf('.');
+              fileName = ext !== -1 
+                ? `${fileName.slice(0, ext)}_${counter}${fileName.slice(ext)}`
+                : `${fileName}_${counter}`;
+              counter++;
+            }
+            
+            const id = Date.now() + Math.random();
+            const tab = {
+              id: id,
+              name: fileName,
+              displayName: fileName,
+              language: file.language,
+              content: file.content,
+              isUnsaved: false,
+              fileHandle: null
+            };
+            tabs.push(tab);
+          });
+          
+          renderTabs();
+          showToast('Shared files added to workspace');
+          return;
+        } else {
+          showToast('Shared workspace loading cancelled');
+          return;
+        }
+      }
+    }
+
     tabs = [];
-    
-    // Create tabs from the shared data
+
     workspaceData.forEach(file => {
       const id = Date.now() + Math.random();
       const tab = {
@@ -1939,7 +1976,6 @@ async function loadSharedWorkspace(compressedData) {
   }
 }
 
-// Add gzip compression function
 async function gzip(input) {
   const cs = new CompressionStream('gzip');
   const writer = cs.writable.getWriter();
@@ -1957,7 +1993,6 @@ async function gzip(input) {
   return new Uint8Array(output);
 }
 
-// Add ungzip decompression function
 async function ungzip(input) {
   const ds = new DecompressionStream('gzip');
   const writer = ds.writable.getWriter();
