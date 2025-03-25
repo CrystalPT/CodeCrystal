@@ -262,6 +262,7 @@ body, html {
     height: calc(100vh - 140px) !important;
     overflow: visible !important;
     background-color: #1e1e2e !important;
+    position: relative !important;
   }
 
   .CodeMirror-sizer,
@@ -292,4 +293,53 @@ body, html {
 
   .light-theme .CodeMirror-gutters {
     background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Search highlighting */
+  .bg-yellow-500.bg-opacity-50 {
+    background-color: rgba(255, 255, 0, 0.3) !important;
+    color: inherit !important;
+  }
+
+  .search-highlight {
+    background-color: rgba(255, 255, 0, 0.3) !important;
+    color: inherit !important;
+  }
+
+  .search-highlight.active {
+    background-color: rgba(255, 165, 0, 0.5) !important;
+    color: inherit !important;
+  }
+
+  #search-panel {
+    position: fixed !important;
+    top: 120px !important;
+    right: 20px !important;
+    background-color: #1e1e2e !important;
+    border: 1px solid #4B5563 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    padding: 12px !important;
+    z-index: 100 !important;
+  }
+
+  #search-panel input {
+    background-color: #374151 !important;
+    border: 1px solid #4B5563 !important;
+    color: white !important;
+    padding: 6px 10px !important;
+    width: 200px !important;
+    border-radius: 4px !important;
+  }
+
+  #search-panel button {
+    padding: 6px !important;
+    border-radius: 4px !important;
+    background-color: #374151 !important;
+    color: white !important;
+    transition: background-color 0.2s !important;
+  }
+
+  #search-panel button:hover {
+    background-color: #4B5563 !important;
   }
